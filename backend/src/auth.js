@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { httpError } from "./utils.js";
 import { getJwtExpiresIn, getJwtSecret } from "./security.js";
-import { UsuarioRepository } from "../modules/ManterUsuario/Equipes/Repositories/UsuarioRepository.js";
+import { UsuarioRepository } from "../modules/ManterUsuario/Repositories/UsuarioRepository.js";
 
 const JWT_ALG = "HS256";
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 12);

@@ -1,5 +1,5 @@
-import { getDb } from "../../../../src/db.js";
-import { omitId, omitMany } from "../../../../src/utils.js";
+import { getDb } from "../../../src/db.js";
+import { omitId, omitMany } from "../../../src/utils.js";
 import { Usuario } from "../Usuario/Usuario.js";
 
 const users = () => getDb().collection("users");

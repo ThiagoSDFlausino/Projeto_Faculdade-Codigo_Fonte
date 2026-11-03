@@ -1,5 +1,5 @@
-import { auth } from "../../../../src/auth.js";
-import { PerfilUsuario } from "../../Equipes/Enum/PerfilUsuario.js";
+import { auth } from "../../../src/auth.js";
+import { PerfilUsuario } from "../../ManterUsuario/Enum/PerfilUsuario.js";
 import { ClienteService } from "../Service/ClienteService.js";
 
 export function createClienteRouter(Router) {

@@ -4,14 +4,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import Layout from "@/components/Layout";
-import Login from "@/modules/ManterUsuario/Equipes/Paginas/Login";
+import Login from "@/modules/ManterUsuario/Paginas/Login";
 import Dashboard from "@/pages/Dashboard";
 import Financeiro from "@/modules/ManterFinanceiro/Lancamentos/Paginas/Financeiro";
-import Clientes from "@/modules/ManterUsuario/Clientes/Paginas/Clientes";
-import ClienteDetalhe from "@/modules/ManterUsuario/Clientes/Paginas/ClienteDetalhe";
+import Clientes from "@/modules/ManterClientes/Paginas/Clientes";
+import ClienteDetalhe from "@/modules/ManterClientes/Paginas/ClienteDetalhe";
 import Agendamentos from "@/modules/ManterAgendamento/Paginas/Agendamentos";
 import Procedimentos from "@/modules/ManterProcedimento/Paginas/Procedimentos";
-import Equipe from "@/modules/ManterUsuario/Equipes/Paginas/Equipe";
+import Equipe from "@/modules/ManterUsuario/Paginas/Equipe";
 import FluxoCaixa from "@/modules/ManterFinanceiro/FluxoCaixa/Paginas/FluxoCaixa";
 import Fechamento from "@/modules/ManterFinanceiro/Fechamento/Paginas/Fechamento";
 

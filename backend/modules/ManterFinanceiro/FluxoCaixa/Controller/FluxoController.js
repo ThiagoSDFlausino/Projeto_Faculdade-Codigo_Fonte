@@ -1,5 +1,5 @@
 import { auth } from "../../../../src/auth.js";
-import { PerfilUsuario } from "../../../ManterUsuario/Equipes/Enum/PerfilUsuario.js";
+import { PerfilUsuario } from "../../../ManterUsuario/Enum/PerfilUsuario.js";
 import { FluxoService } from "../Service/FluxoService.js";
 
 export function createFluxoRouter(Router) {

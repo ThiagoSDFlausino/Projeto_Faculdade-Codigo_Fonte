@@ -1,5 +1,5 @@
-import { auth } from "../../../../src/auth.js";
-import { authRateLimit } from "../../../../src/security.js";
+import { auth } from "../../../src/auth.js";
+import { authRateLimit } from "../../../src/security.js";
 import { PerfilUsuario } from "../Enum/PerfilUsuario.js";
 import { UsuarioService } from "../Service/UsuarioService.js";
 

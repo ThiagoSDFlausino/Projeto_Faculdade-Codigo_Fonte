@@ -1,6 +1,6 @@
 import { httpError, id, nowIso } from "../../../src/utils.js";
-import { PerfilUsuario } from "../../ManterUsuario/Equipes/Enum/PerfilUsuario.js";
-import { UsuarioRepository } from "../../ManterUsuario/Equipes/Repositories/UsuarioRepository.js";
+import { PerfilUsuario } from "../../ManterUsuario/Enum/PerfilUsuario.js";
+import { UsuarioRepository } from "../../ManterUsuario/Repositories/UsuarioRepository.js";
 import { StatusAgenda } from "../Enum/StatusAgenda.js";
 import { AgendaRepository } from "../Repositories/AgendaRepository.js";
 import { Agendamento } from "../Agendamento/Agendamento.js";

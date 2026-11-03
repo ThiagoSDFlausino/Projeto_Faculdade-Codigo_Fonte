@@ -1,5 +1,5 @@
-import { getDb } from "../../../../src/db.js";
-import { omitId, omitMany } from "../../../../src/utils.js";
+import { getDb } from "../../../src/db.js";
+import { omitId, omitMany } from "../../../src/utils.js";
 import { Cliente } from "../Cliente/Cliente.js";
 
 const col = (name) => getDb().collection(name);

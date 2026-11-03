@@ -1,7 +1,7 @@
-import { recalcClienteLtv, syncClienteDenormalized } from "../../../../src/clientMetrics.js";
-import { httpError, id, nowIso, omitMany } from "../../../../src/utils.js";
-import { PerfilUsuario } from "../../Equipes/Enum/PerfilUsuario.js";
-import { UsuarioRepository } from "../../Equipes/Repositories/UsuarioRepository.js";
+import { recalcClienteLtv, syncClienteDenormalized } from "../../../src/clientMetrics.js";
+import { httpError, id, nowIso, omitMany } from "../../../src/utils.js";
+import { PerfilUsuario } from "../../ManterUsuario/Enum/PerfilUsuario.js";
+import { UsuarioRepository } from "../../ManterUsuario/Repositories/UsuarioRepository.js";
 import { Cliente } from "../Cliente/Cliente.js";
 import { StatusCliente } from "../Enum/StatusCliente.js";
 import { ClienteRepository } from "../Repositories/ClienteRepository.js";

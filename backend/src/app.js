@@ -1,6 +1,6 @@
 import express, { Router } from "express";
-import { createUsuarioRouter } from "../modules/ManterUsuario/Equipes/Controller/UsuarioController.js";
-import { createClienteRouter } from "../modules/ManterUsuario/Clientes/Controller/ClienteController.js";
+import { createUsuarioRouter } from "../modules/ManterUsuario/Controller/UsuarioController.js";
+import { createClienteRouter } from "../modules/ManterClientes/Controller/ClienteController.js";
 import { createProcedimentoRouter } from "../modules/ManterProcedimento/Controller/ProcedimentoController.js";
 import { createAgendaRouter } from "../modules/ManterAgendamento/Controller/AgendaController.js";
 import { createLancamentoRouter } from "../modules/ManterFinanceiro/Lancamentos/Controller/LancamentoController.js";
