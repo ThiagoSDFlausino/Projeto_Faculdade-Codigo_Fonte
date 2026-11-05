@@ -1,7 +1,3 @@
-/**
- * Invalida caches que dependem de dados/cálculos do cliente
- * (dashboard, fluxo, listas, agenda, etc.).
- */
 export function invalidateClienteImpact(qc, clienteId) {
   const keys = [
     ["clientes"],

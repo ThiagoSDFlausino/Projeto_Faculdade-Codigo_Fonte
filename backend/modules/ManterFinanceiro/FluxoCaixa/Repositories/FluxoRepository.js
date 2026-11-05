@@ -3,13 +3,13 @@ import { omitMany } from "../../../../src/utils.js";
 
 const col = (name) => getDb().collection(name);
 
-/** Persistência usada pelo Fluxo de Caixa. */
 export const FluxoRepository = {
-  async findTransactions() {
-    return omitMany(await col("transactions").find({}, { projection: { _id: 0 } }).toArray());
+  async findDespesas() {
+    return omitMany(await col("transactions").find({}, { projection: { _id: 0 } }).toArray())
+      .filter((t) => t.type === "despesa" || !t.type || t.type !== "receita");
   },
 
-  async findSessoes() {
-    return omitMany(await col("sessoes").find({}, { projection: { _id: 0 } }).toArray());
+  async findAgendamentos() {
+    return omitMany(await col("appointments").find({}, { projection: { _id: 0 } }).toArray());
   },
 };

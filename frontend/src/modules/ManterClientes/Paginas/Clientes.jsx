@@ -46,8 +46,8 @@ export default function Clientes() {
   return (
     <div>
       <PageHeader
-        title="Clientes (CRM)"
-        subtitle="Cadastro, histórico e valor de cada paciente"
+        title="Manter Clientes"
+        subtitle="Caso de uso da Recepção (herdado por Adm e Profissional)"
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

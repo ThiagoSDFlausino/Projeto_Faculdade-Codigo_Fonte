@@ -7,7 +7,6 @@ import { UsuarioRepository } from "../modules/ManterUsuario/Repositories/Usuario
 const JWT_ALG = "HS256";
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 12);
 
-/** Hash dummy para equalizar tempo de login quando o e-mail não existe. */
 const DUMMY_HASH = bcrypt.hashSync("timing-dummy-not-a-real-password", 10);
 
 export function hashPassword(password) {

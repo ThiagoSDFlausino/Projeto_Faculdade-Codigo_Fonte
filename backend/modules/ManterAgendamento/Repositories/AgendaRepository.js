@@ -4,7 +4,6 @@ import { Agendamento } from "../Agendamento/Agendamento.js";
 
 const appointments = () => getDb().collection("appointments");
 
-/** Persistência e mapeamento da entidade Agendamento. */
 export const AgendaRepository = {
   async find(filter = {}) {
     const rows = omitMany(

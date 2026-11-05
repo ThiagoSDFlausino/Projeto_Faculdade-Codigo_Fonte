@@ -92,14 +92,11 @@ const formatDia = (iso) => {
   }
 };
 
-/** Painel Atenção com nomes (não só contagem) */
 const AtencaoPanel = ({ data }) => {
   const inativos = Array.isArray(data.clientes_inativos_lista) ? data.clientes_inativos_lista : [];
   const anivRaw = data.aniversariantes || data.aniversariantes_mes;
   const aniv = Array.isArray(anivRaw) ? anivRaw : [];
-  // Fallback: se a API ainda não mandar a lista, monta a partir da agenda já carregada
   const ativosFromApi = Array.isArray(data.agendamentos_ativos_lista) ? data.agendamentos_ativos_lista : [];
-  // agendamentos_hoje é lista no admin e contagem (number) na recepção/profissional
   const hojeLista = Array.isArray(data.agendamentos_hoje) ? data.agendamentos_hoje : [];
   const proximosLista = Array.isArray(data.proximos) ? data.proximos : [];
   const ativosFallback = [...proximosLista, ...hojeLista]
@@ -311,7 +308,6 @@ export default function Dashboard() {
       </div>
     );
 
-  // PROFISSIONAL
   if (data.role === "profissional")
     return (
       <div className="space-y-6">
@@ -347,7 +343,6 @@ export default function Dashboard() {
       </div>
     );
 
-  // SECRETARIA
   if (data.role === "secretaria")
     return (
       <div className="space-y-6">
@@ -374,7 +369,6 @@ export default function Dashboard() {
       </div>
     );
 
-  // ADMIN — Dashboard Estratégico
   const aniv = data.aniversariantes_mes || data.aniversariantes || [];
   const daily = data.faturamento_diario || [];
   const topServ = (data.atendimentos_por_servico || []).slice(0, 5);

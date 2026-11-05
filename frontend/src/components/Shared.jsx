@@ -22,7 +22,6 @@ export const Card = ({ children, className = "", ...props }) => (
   </div>
 );
 
-/** Gradientes dos KPI cards (mesmo visual do Dashboard Estratégico) */
 export const STAT_GRADIENTS = {
   rose: "from-[#E05A78] to-[#9B4B7C]",
   gold: "from-[#F0A04B] to-[#C47A2E]",
@@ -34,10 +33,6 @@ export const STAT_GRADIENTS = {
   red: "from-red-500 to-rose-700",
 };
 
-/**
- * Card KPI colorido com gradiente — use nas telas de resumo
- * (Dashboard, Fluxo, Fechamento, etc.)
- */
 export const StatHero = ({
   label,
   value,

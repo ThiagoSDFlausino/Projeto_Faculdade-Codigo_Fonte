@@ -11,7 +11,6 @@ dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), ".
 const port = Number(process.env.PORT || 8000);
 const host = process.env.HOST || "0.0.0.0";
 
-/** Abre a porta imediatamente (Containers checam readiness) e sobe a app depois. */
 const boot = express();
 let state = { ready: false, error: null };
 
@@ -34,14 +33,12 @@ boot.listen(port, host, () => {
       await seed();
       console.log("[boot] seed ok");
       const app = createApp();
-      // Troca o handler: encaminha tudo para o app real (exceto health já respondido acima se necessário)
       boot.use((req, res, next) => app(req, res, next));
       state.ready = true;
       console.log("[boot] app pronta");
     } catch (err) {
       state.error = err?.message || String(err);
       console.error("[boot] falha fatal:", err);
-      // Mantém /api/health vivo para diagnóstico; não derruba o processo
     }
   })();
 });

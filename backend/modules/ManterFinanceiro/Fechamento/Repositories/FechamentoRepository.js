@@ -4,7 +4,6 @@ import { Fechamento } from "../Fechamento/Fechamento.js";
 
 const col = (name) => getDb().collection(name);
 
-/** Persistência e mapeamento da entidade Fechamento. */
 export const FechamentoRepository = {
   async findAll() {
     const rows = omitMany(
@@ -33,12 +32,13 @@ export const FechamentoRepository = {
   },
 
   async delete(id) {
+    await col("appointments").updateMany({ fechamento_id: id }, { $unset: { fechamento_id: "" } });
     await col("sessoes").updateMany({ fechamento_id: id }, { $unset: { fechamento_id: "" } });
     return col("fechamentos").deleteOne({ id });
   },
 
-  async findSessoes() {
-    return omitMany(await col("sessoes").find({}, { projection: { _id: 0 } }).toArray());
+  async findAgendamentos() {
+    return omitMany(await col("appointments").find({}, { projection: { _id: 0 } }).toArray());
   },
 
   async findProfissionais() {
@@ -53,10 +53,10 @@ export const FechamentoRepository = {
     );
   },
 
-  async markSessoes(sessaoIds, fechamentoId) {
-    if (!sessaoIds?.length) return;
-    return col("sessoes").updateMany(
-      { id: { $in: sessaoIds } },
+  async markAgendamentos(ids, fechamentoId) {
+    if (!ids?.length) return;
+    return col("appointments").updateMany(
+      { id: { $in: ids } },
       { $set: { fechamento_id: fechamentoId } },
     );
   },

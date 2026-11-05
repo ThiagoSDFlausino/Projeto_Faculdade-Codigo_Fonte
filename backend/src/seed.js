@@ -44,7 +44,6 @@ export async function seed() {
     } else profIds[name] = u.id;
   }
 
-  // Seed base only if empty
   if ((await db.collection("clientes").countDocuments({})) === 0) {
     const clientesSeed = [
       { name: "Camila Ribeiro", phone: "(11) 98765-4321", email: "camila.ribeiro@email.com", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80", tags: ["VIP", "Fidelidade Ouro"], status: "Ativo", notes: "Cliente desde 2022.", birthdate: "1990-04-12" },
@@ -131,28 +130,17 @@ export async function seed() {
 
     const txs = [];
     const desp = [["Aluguel", 4500], ["Fornecedor de Insumos", 3200], ["Salários", 9800], ["Marketing", 1500], ["Energia e Água", 900]];
-    const nomes = Object.keys(ids);
     for (let m = 0; m < 6; m++) {
       const monthDate = new Date();
       monthDate.setDate(1);
       monthDate.setMonth(monthDate.getMonth() - m);
       const base = `${monthDate.toISOString().slice(0, 8)}10`;
-      for (let i = 0; i < 18 + Math.floor(rnd() * 5); i++) {
-        const name = pick(nomes);
-        const p = pick(procedimentos);
-        const st = m > 0 || rnd() > 0.35 ? "Pago" : pick(["Pendente", "Atrasado"]);
-        const day = 1 + Math.floor(rnd() * 28);
-        txs.push({
-          id: id(), type: "receita", description: `${p[0]} - ${name}`, category: p[0], amount: p[1],
-          status: st, party: name, due_date: `${monthDate.toISOString().slice(0, 8)}${String(day).padStart(2, "0")}`,
-          paid_date: st === "Pago" ? base : "", created_at: nowIso(),
-        });
-      }
       for (const [cat, val] of desp) {
-        const st = m > 0 ? "Pago" : pick(["Pago", "Pendente"]);
         txs.push({
-          id: id(), type: "despesa", description: cat, category: cat, amount: val, status: st, party: cat,
-          due_date: `${monthDate.toISOString().slice(0, 8)}05`, paid_date: st === "Pago" ? base : "", created_at: nowIso(),
+          id: id(), type: "despesa", description: cat, category: cat, amount: val, party: cat,
+          due_date: `${monthDate.toISOString().slice(0, 8)}05`,
+          data: `${monthDate.toISOString().slice(0, 8)}05`,
+          created_at: nowIso(),
         });
       }
     }

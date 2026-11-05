@@ -5,9 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { periodPresets } from "@/lib/period";
 
-/**
- * Barra de filtros de período (+ opcionais: profissional, procedimento, categoria).
- */
 export default function PeriodFilters({
   preset,
   onPresetChange,

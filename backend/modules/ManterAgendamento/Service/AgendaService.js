@@ -1,6 +1,7 @@
 import { httpError, id, nowIso } from "../../../src/utils.js";
 import { PerfilUsuario } from "../../ManterUsuario/Enum/PerfilUsuario.js";
 import { UsuarioRepository } from "../../ManterUsuario/Repositories/UsuarioRepository.js";
+import { ProcedimentoRepository } from "../../ManterProcedimento/Repositories/ProcedimentoRepository.js";
 import { StatusAgenda } from "../Enum/StatusAgenda.js";
 import { AgendaRepository } from "../Repositories/AgendaRepository.js";
 import { Agendamento } from "../Agendamento/Agendamento.js";
@@ -20,10 +21,20 @@ function filtroListagem(usuario, query = {}) {
 }
 
 function noPeriodo(item, query = {}) {
-  const day = (item.datetime || "").slice(0, 10);
+  const day = (item.data_hora_inicio || item.datetime || "").slice(0, 10);
   if (query.from_date && day < query.from_date) return false;
   if (query.to_date && day > query.to_date) return false;
   return true;
+}
+
+function addMinutesLocal(isoLocal, minutes) {
+  if (!isoLocal) return "";
+  const m = String(isoLocal).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return "";
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]));
+  d.setMinutes(d.getMinutes() + (Number(minutes) || 0));
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 async function aplicarProfissional(usuario, data, atual) {
@@ -38,7 +49,29 @@ async function aplicarProfissional(usuario, data, atual) {
   return data;
 }
 
-function campos(data) {
+async function validarProcedimentoDoProfissional(professionalId, procedureId) {
+  if (!professionalId || !procedureId) return;
+  const prof = await UsuarioRepository.findById(professionalId);
+  const allowed = prof?.procedimentoIds || [];
+  if (allowed.length > 0 && !allowed.includes(procedureId)) {
+    throw httpError(400, "Este profissional não está habilitado para o procedimento selecionado");
+  }
+}
+
+async function resolverHorarios(data) {
+  const inicio = data.data_hora_inicio || data.datetime || "";
+  let fim = data.data_hora_fim || "";
+  if (inicio && !fim && data.procedure_id) {
+    const proc = await ProcedimentoRepository.findById(data.procedure_id);
+    const duracao = proc?.duration_min || 60;
+    fim = addMinutesLocal(inicio, duracao);
+  }
+  return { inicio, fim };
+}
+
+async function campos(data) {
+  const { inicio, fim } = await resolverHorarios(data);
+  const valor = Number(data.valor_cobrado ?? data.value) || 0;
   return {
     cliente_id: data.cliente_id || "",
     cliente_name: data.cliente_name || "",
@@ -46,10 +79,14 @@ function campos(data) {
     professional: data.professional || "",
     procedure_id: data.procedure_id || "",
     procedure: data.procedure || "",
-    datetime: data.datetime || "",
+    data_hora_inicio: inicio,
+    data_hora_fim: fim,
+    datetime: inicio,
+    valor_cobrado: valor,
+    value: valor,
+    observacoes: data.observacoes || "",
     room: data.room || "",
     status: data.status || StatusAgenda.AGENDADO,
-    value: Number(data.value) || 0,
   };
 }
 
@@ -61,9 +98,10 @@ export const AgendaService = {
 
   async criar(usuario, body = {}) {
     const data = await aplicarProfissional(usuario, { ...body });
+    await validarProcedimentoDoProfissional(data.professional_id, data.procedure_id);
     const agendamento = new Agendamento({
       id: id(),
-      ...campos(data),
+      ...(await campos(data)),
       created_at: nowIso(),
     });
     await AgendaRepository.insert(agendamento);
@@ -77,7 +115,16 @@ export const AgendaService = {
       throw httpError(404, "Agendamento não encontrado");
     }
     const data = await aplicarProfissional(usuario, { ...body }, existing);
-    const set = campos(data);
+    const professionalId = data.professional_id || existing.professional_id;
+    const procedureId = data.procedure_id || existing.procedure_id;
+    await validarProcedimentoDoProfissional(professionalId, procedureId);
+    const set = await campos({
+      ...existing.toDocument(),
+      ...data,
+      data_hora_inicio: data.data_hora_inicio || data.datetime || existing.data_hora_inicio || existing.datetime,
+      data_hora_fim: data.data_hora_fim !== undefined ? data.data_hora_fim : existing.data_hora_fim,
+      observacoes: data.observacoes !== undefined ? data.observacoes : existing.observacoes,
+    });
     const updated = await AgendaRepository.update(idAgendamento, set);
     return updated.toDocument();
   },

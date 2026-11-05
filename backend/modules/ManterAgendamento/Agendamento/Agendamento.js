@@ -1,6 +1,5 @@
 import { StatusAgenda } from "../Enum/StatusAgenda.js";
 
-/** Entidade de agendamento. O banco guarda o mesmo formato em JSON. */
 export class Agendamento {
   constructor(data = {}) {
     this.id = data.id || "";
@@ -10,10 +9,14 @@ export class Agendamento {
     this.professional = data.professional || "";
     this.procedure_id = data.procedure_id || "";
     this.procedure = data.procedure || "";
-    this.datetime = data.datetime || "";
+    this.data_hora_inicio = data.data_hora_inicio || data.datetime || "";
+    this.data_hora_fim = data.data_hora_fim || "";
+    this.datetime = this.data_hora_inicio;
+    this.valor_cobrado = Number(data.valor_cobrado ?? data.value) || 0;
+    this.value = this.valor_cobrado;
+    this.observacoes = data.observacoes || data.notes || "";
     this.room = data.room || "";
     this.status = data.status || StatusAgenda.AGENDADO;
-    this.value = Number(data.value) || 0;
     this.created_at = data.created_at || data.createdAt || null;
   }
 
@@ -26,10 +29,14 @@ export class Agendamento {
       professional: this.professional,
       procedure_id: this.procedure_id,
       procedure: this.procedure,
-      datetime: this.datetime,
+      data_hora_inicio: this.data_hora_inicio,
+      data_hora_fim: this.data_hora_fim,
+      datetime: this.data_hora_inicio,
+      valor_cobrado: this.valor_cobrado,
+      value: this.valor_cobrado,
+      observacoes: this.observacoes,
       room: this.room,
       status: this.status,
-      value: this.value,
       created_at: this.created_at,
     };
   }

@@ -44,7 +44,6 @@ function weekKey(isoDate) {
   return `${d.getFullYear()}-S${String(week).padStart(2, "0")}`;
 }
 
-/** Interpreta from/to/profissional/procedimento da query. Sem datas = mês atual. */
 function resolveFilters(query = {}) {
   const hoje = todayStr();
   let from = (query.from || "").slice(0, 10);
@@ -135,12 +134,15 @@ async function adminDashboard(query = {}) {
   sessoes = sessoes.filter((s) => matchProfessional(s, professional_id) && matchProcedure(s, procedure));
   appts = appts.filter((a) => matchProfessional(a, professional_id) && matchProcedure(a, procedure));
 
-  const paidReceitas = txs.filter((t) => t.type === "receita" && t.status === "Pago");
-  const paidDespesas = txs.filter((t) => t.type === "despesa" && t.status === "Pago");
+  const paidReceitas = appts.filter((a) => a.status === "Concluído");
+  const paidDespesas = txs.filter((t) => t.type !== "receita");
+
+  const valorAppt = (a) => Number(a.valor_cobrado ?? a.value) || 0;
+  const dataAppt = (a) => a.data_hora_inicio || a.datetime || "";
 
   const fatMes = (s, e) => paidReceitas
-    .filter((t) => inRange(t.paid_date || t.due_date, s, e))
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+    .filter((a) => inRange(dataAppt(a), s, e))
+    .reduce((sum, a) => sum + valorAppt(a), 0);
 
   const faturamento_mes = fatMes(start, end);
   const faturamento_mes_anterior = fatMes(prevStart, prevEnd);
@@ -186,21 +188,20 @@ async function adminDashboard(query = {}) {
 
   const profMap = Object.fromEntries(users.map((u) => [u.id, u]));
   let comissoes_pendentes = 0;
-  for (const s of sessoes.filter((x) => inRange(x.date, start, end))) {
-    const p = profMap[s.professional_id];
+  for (const a of paidReceitas.filter((x) => inRange(dataAppt(x), start, end))) {
+    const p = profMap[a.professional_id];
     if (!p) continue;
-    comissoes_pendentes += (s.value || 0) * ((p.commission_pct || 0) / 100);
+    comissoes_pendentes += valorAppt(a) * ((p.commission_pct || 0) / 100);
   }
 
   const daySpan = Math.max(1, Math.round((new Date(`${end}T12:00:00`) - new Date(`${start}T12:00:00`)) / 86400000) + 1);
   const taxa_ocupacao = Math.min((total_atendimentos / (Math.max(daySpan, 1) * 8)) * 100, 100);
 
-  // Daily revenue in selected period
   const dailyMap = {};
   for (const d of daysInRange(start, end)) dailyMap[d] = 0;
-  for (const t of paidReceitas) {
-    const d = (t.paid_date || t.due_date || "").slice(0, 10);
-    if (d && d in dailyMap) dailyMap[d] += t.amount || 0;
+  for (const a of paidReceitas) {
+    const d = dataAppt(a).slice(0, 10);
+    if (d && d in dailyMap) dailyMap[d] += valorAppt(a);
   }
   const faturamento_diario = Object.entries(dailyMap).map(([data, valor]) => ({
     data,
@@ -218,9 +219,9 @@ async function adminDashboard(query = {}) {
     .slice(0, 10);
 
   const receitaProf = {};
-  for (const s of sessoes.filter((x) => inRange(x.date, start, end))) {
-    const nome = profMap[s.professional_id]?.name || s.professional || "Sem profissional";
-    receitaProf[nome] = (receitaProf[nome] || 0) + (s.value || 0);
+  for (const a of paidReceitas.filter((x) => inRange(dataAppt(x), start, end))) {
+    const nome = profMap[a.professional_id]?.name || a.professional || "Sem profissional";
+    receitaProf[nome] = (receitaProf[nome] || 0) + valorAppt(a);
   }
   const receita_por_profissional = Object.entries(receitaProf)
     .map(([profissional, receita]) => ({ profissional, receita: Math.round(receita * 100) / 100, valor: Math.round(receita * 100) / 100 }))
@@ -293,22 +294,32 @@ async function adminDashboard(query = {}) {
     .slice(0, 5);
 
   const receita = paidReceitas
-    .filter((t) => inRange(t.paid_date || t.due_date, start, end))
-    .reduce((s, t) => s + (t.amount || 0), 0);
+    .filter((a) => inRange(dataAppt(a), start, end))
+    .reduce((s, a) => s + valorAppt(a), 0);
   const despesa = paidDespesas
-    .filter((t) => inRange(t.paid_date || t.due_date, start, end))
+    .filter((t) => inRange(t.data || t.due_date || t.paid_date, start, end))
     .reduce((s, t) => s + (t.amount || 0), 0);
-  const a_receber = txs.filter((t) => t.type === "receita" && ["Pendente", "Atrasado"].includes(t.status)).reduce((s, t) => s + t.amount, 0);
-  const a_pagar = txs.filter((t) => t.type === "despesa" && ["Pendente", "Atrasado"].includes(t.status)).reduce((s, t) => s + t.amount, 0);
+  const a_receber = appts
+    .filter((a) => a.status === "Confirmado" && inRange(dataAppt(a), start, end))
+    .reduce((s, a) => s + valorAppt(a), 0);
+  const a_pagar = 0;
 
   const monthsPt = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const monthly = {};
-  for (const t of txs.filter((x) => x.status === "Pago")) {
-    const d = t.paid_date || t.due_date || "";
+  for (const a of paidReceitas) {
+    const d = dataAppt(a);
     if (d.length >= 7) {
       const key = d.slice(0, 7);
       monthly[key] ||= { receita: 0, despesa: 0 };
-      monthly[key][t.type === "receita" ? "receita" : "despesa"] += t.amount || 0;
+      monthly[key].receita += valorAppt(a);
+    }
+  }
+  for (const t of paidDespesas) {
+    const d = t.data || t.due_date || t.paid_date || "";
+    if (d.length >= 7) {
+      const key = d.slice(0, 7);
+      monthly[key] ||= { receita: 0, despesa: 0 };
+      monthly[key].despesa += t.amount || 0;
     }
   }
   const chart = Object.keys(monthly).sort().slice(-6).map((key) => {
@@ -341,7 +352,6 @@ async function adminDashboard(query = {}) {
   return {
     role: "admin",
     periodo: { from: start, to: end, professional_id: professional_id || null, procedure: procedure || null },
-    // strategic KPIs (Suleima CRM style)
     faturamento_mes: Math.round(faturamento_mes * 100) / 100,
     faturamento_mes_anterior: Math.round(faturamento_mes_anterior * 100) / 100,
     faturamento_variacao,
@@ -368,7 +378,6 @@ async function adminDashboard(query = {}) {
     horario_mais_lucrativo,
     clientes_alto_potencial,
     agendamentos_hoje,
-    // legacy + cash overview
     receita: Math.round(receita * 100) / 100,
     despesa: Math.round(despesa * 100) / 100,
     lucro: Math.round((receita - despesa) * 100) / 100,

@@ -1,5 +1,3 @@
-/** Avalia filtros estilo Mongo ($eq implícito, $ne, $in, $gte, $lte, $gt, $lt, $regex, $or, $and, $options). */
-
 function getPath(obj, path) {
   if (!path.includes(".")) return obj?.[path];
   return path.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
@@ -7,7 +5,6 @@ function getPath(obj, path) {
 
 function matchOp(value, cond) {
   if (cond == null || typeof cond !== "object" || Array.isArray(cond)) {
-    // Mongo: campo array casa com escalar se contém o valor
     if (Array.isArray(value) && !Array.isArray(cond)) return value.includes(cond);
     return value === cond;
   }

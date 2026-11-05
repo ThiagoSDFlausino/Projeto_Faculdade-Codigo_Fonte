@@ -1,5 +1,3 @@
-/** Utilitários de período para dashboard e filtros financeiros */
-
 export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -16,7 +14,6 @@ export function periodPresets() {
   ];
 }
 
-/** Resolve { from, to } a partir do preset ou datas custom. */
 export function resolvePeriodRange(preset, customFrom = "", customTo = "") {
   const to = todayStr();
   const now = new Date();
@@ -44,7 +41,6 @@ export function periodLabel(preset, from, to) {
   return "período";
 }
 
-/** Params para querystring da API (omite vazios). */
 export function toApiParams({ from, to, professional_id, procedure, category }) {
   const p = {};
   if (from) p.from = from;

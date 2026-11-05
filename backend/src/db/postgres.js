@@ -13,7 +13,6 @@ function connectionHost(connectionString) {
   return new URL(normalized).hostname;
 }
 
-/** Driver Postgres (Supabase) com a mesma interface do SQLite. */
 export function createPostgresDriver(connectionString) {
   const host = connectionHost(connectionString);
   const useSsl = /supabase\.(co|com)/i.test(host) || process.env.DATABASE_SSL === "1";
@@ -43,7 +42,6 @@ export function createPostgresDriver(connectionString) {
   };
 }
 
-/** A chave publishable não lê dados de pacientes. O backend usa a conexão Postgres. */
 export async function securePublicTables(driver) {
   const roles = await driver.all(
     "SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated')",

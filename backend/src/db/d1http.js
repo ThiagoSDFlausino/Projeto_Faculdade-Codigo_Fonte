@@ -1,11 +1,3 @@
-/**
- * Driver D1 via HTTP virtual host `http://d1` (outboundByHost no Worker).
- * Protocolo JSON:
- *   POST /query  { sql, params } -> { results: [{...}] }
- *   POST /run    { sql, params } -> { success, meta }
- *   POST /exec   { sql }         -> { success }
- */
-
 const D1_BASE = process.env.D1_HTTP_BASE || "http://my.d1";
 
 async function call(pathname, body) {

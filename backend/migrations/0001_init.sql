@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS procedures (
   data TEXT NOT NULL
 );
 
--- ManterFinanceiro / Lancamentos + FluxoCaixa
+-- ManterFinanceiro / Despesas + FluxoCaixa
 CREATE TABLE IF NOT EXISTS transactions (
   id TEXT PRIMARY KEY,
   type TEXT,

@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Driver SQLite local via node:sqlite (sem binário nativo extra). */
 export function createSqliteDriver(dbPath) {
   if (dbPath !== ":memory:") {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -14,7 +13,6 @@ export function createSqliteDriver(dbPath) {
   try {
     db.exec("PRAGMA journal_mode = WAL");
   } catch {
-    /* memory */
   }
 
   return {

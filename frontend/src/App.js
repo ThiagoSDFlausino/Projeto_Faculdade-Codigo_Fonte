@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Layout from "@/components/Layout";
 import Login from "@/modules/ManterUsuario/Paginas/Login";
 import Dashboard from "@/pages/Dashboard";
-import Financeiro from "@/modules/ManterFinanceiro/Lancamentos/Paginas/Financeiro";
+import Despesas from "@/modules/ManterFinanceiro/Despesas/Paginas/Despesas";
 import Clientes from "@/modules/ManterClientes/Paginas/Clientes";
 import ClienteDetalhe from "@/modules/ManterClientes/Paginas/ClienteDetalhe";
 import Agendamentos from "@/modules/ManterAgendamento/Paginas/Agendamentos";
@@ -35,7 +35,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Protected><Dashboard /></Protected>} />
-            <Route path="/financeiro" element={<Protected roles={["admin"]}><Financeiro /></Protected>} />
+            <Route path="/financeiro" element={<Protected roles={["admin"]}><Despesas /></Protected>} />
             <Route path="/fluxo-caixa" element={<Protected roles={["admin"]}><FluxoCaixa /></Protected>} />
             <Route path="/fechamento" element={<Protected roles={["admin"]}><Fechamento /></Protected>} />
             <Route path="/clientes" element={<Protected><Clientes /></Protected>} />

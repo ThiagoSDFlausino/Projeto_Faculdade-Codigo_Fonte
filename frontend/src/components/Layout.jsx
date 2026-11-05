@@ -30,20 +30,20 @@ const NAV_GROUPS = [
   {
     title: "Financeiro",
     items: [
-      { to: "/financeiro", label: "Lançamentos", icon: Wallet, testid: "nav-financial-link", roles: ["admin"] },
+      { to: "/financeiro", label: "Manter Despesas", icon: Wallet, testid: "nav-financial-link", roles: ["admin"] },
       { to: "/fluxo-caixa", label: "Fluxo de Caixa", icon: Landmark, testid: "nav-cashflow-link", roles: ["admin"] },
-      { to: "/fechamento", label: "Fechamento", icon: Calculator, testid: "nav-closing-link", roles: ["admin"] },
+      { to: "/fechamento", label: "Folha de Pagamento", icon: Calculator, testid: "nav-closing-link", roles: ["admin"] },
     ],
   },
   {
     title: "Gestão",
     items: [
-      { to: "/equipe", label: "Equipe", icon: UserCog, testid: "nav-team-link", roles: ["admin"] },
+      { to: "/equipe", label: "Usuários", icon: UserCog, testid: "nav-team-link", roles: ["admin"] },
     ],
   },
 ];
 
-const ROLE_LABEL = { admin: "Dono", secretaria: "Recepção", profissional: "Profissional" };
+const ROLE_LABEL = { admin: "Adm", secretaria: "Recepção", profissional: "Profissional" };
 const SIDEBAR_KEY = "suleima-sidebar-collapsed";
 
 export default function Layout({ children }) {
@@ -63,7 +63,6 @@ export default function Layout({ children }) {
     try {
       localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
     } catch {
-      /* ignore */
     }
   }, [collapsed]);
 

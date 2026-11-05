@@ -1,5 +1,3 @@
-/** Colunas tipadas por tabela + documento JSON completo em `data`. */
-
 export const COLLECTION_TABLES = [
   "users",
   "clientes",
@@ -18,7 +16,6 @@ export const COLLECTION_TABLES = [
 
 const TABLE_SET = new Set(COLLECTION_TABLES);
 
-/** Campos espelhados em colunas SQL (além de id / data). */
 export const COLUMN_MAP = {
   users: ["email", "name", "role", "active"],
   clientes: ["name", "phone", "email", "status", "created_at"],

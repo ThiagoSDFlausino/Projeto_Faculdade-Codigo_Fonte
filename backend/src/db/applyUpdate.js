@@ -1,5 +1,3 @@
-/** Aplica updates estilo Mongo ($set, $inc, $unset). */
-
 function setPath(obj, path, value) {
   if (!path.includes(".")) {
     obj[path] = value;

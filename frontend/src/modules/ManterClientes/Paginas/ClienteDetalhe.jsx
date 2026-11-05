@@ -42,7 +42,6 @@ function formatTimelineDate(dateStr) {
   }
 }
 
-/** Linha do tempo horizontal — arraste para o lado para navegar. */
 function ClientHorizontalTimeline({ items }) {
   const scrollerRef = useRef(null);
   const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
@@ -98,7 +97,6 @@ function ClientHorizontalTimeline({ items }) {
     try {
       scrollerRef.current?.releasePointerCapture?.(e.pointerId);
     } catch {
-      /* ignore */
     }
   };
 
@@ -187,7 +185,6 @@ function ClientHorizontalTimeline({ items }) {
         </div>
       </div>
 
-      {/* Barra de arraste embaixo */}
       <div className="px-6 pb-4 pt-1">
         <div className="flex items-center justify-between gap-3 mb-2">
           <p className="text-[11px] text-slate-400">
@@ -227,7 +224,6 @@ function renderMarkdown(md) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    // table detection
     if (line.trim().startsWith("|") && lines[i + 1] && /^\s*\|?[-:\s|]+\|?\s*$/.test(lines[i + 1])) {
       const header = line.split("|").filter((c) => c.trim() !== "");
       i += 2;
@@ -442,7 +438,6 @@ export default function ClienteDetalhe() {
   if (isLoading || !data) return <div className="text-rose-400">Carregando ficha...</div>;
   const { cliente, anamneses, sessoes, appointments, gallery = [], notas = [], lembretes = [], avaliacoes = [], interacoes = [] } = data;
 
-  // timeline
   const timeline = [
     ...appointments.map((a) => ({ type: "agendamento", date: (a.datetime || "").slice(0, 10), label: a.procedure, sub: `${a.professional || ""} • ${a.status}`, icon: CalendarDays })),
     ...sessoes.map((s) => ({
@@ -530,14 +525,12 @@ export default function ClienteDetalhe() {
               <TabsTrigger value="anamnese" data-testid="tab-anamnese"><ClipboardList className="w-4 h-4 mr-1" /> Anamnese</TabsTrigger>
             </TabsList>
 
-            {/* Timeline */}
             <TabsContent value="timeline" className="mt-4">
               <Card className="overflow-hidden py-4" data-testid="timeline-card">
                 <ClientHorizontalTimeline items={timeline} />
               </Card>
             </TabsContent>
 
-            {/* Antes & Depois */}
             <TabsContent value="antes-depois" className="mt-4">
               <div className="flex justify-end mb-3">
                 <Dialog open={galOpen} onOpenChange={(o) => { setGalOpen(o); if (!o) { setEditingGalId(null); setGal({ ...galEmpty, cliente_id: id }); } }}>
@@ -592,7 +585,6 @@ export default function ClienteDetalhe() {
               )}
             </TabsContent>
 
-            {/* Sessoes */}
             <TabsContent value="sessoes" className="mt-4">
               <div className="flex justify-end mb-3">
                 <Dialog open={sessaoOpen} onOpenChange={(o) => { setSessaoOpen(o); if (!o) { setEditingSessId(null); setSess({ cliente_id: id, procedure: "", procedure_id: "", professional_id: "", date: "", value: "", notes: "" }); } }}>
@@ -657,7 +649,6 @@ export default function ClienteDetalhe() {
               </div>
             </TabsContent>
 
-            {/* Anamnese */}
             <TabsContent value="anamnese" className="mt-4">
               <div className="flex justify-end mb-3">
                 {!isPro && (

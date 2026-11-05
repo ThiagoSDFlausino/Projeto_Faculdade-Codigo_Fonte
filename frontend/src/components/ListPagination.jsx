@@ -3,10 +3,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const DEFAULT_PAGE_SIZE = 10;
 
-/**
- * Hook de paginação client-side.
- * Reseta para página 1 quando `resetKey` muda (ex.: filtro/busca).
- */
 export function usePagination(items = [], { pageSize = DEFAULT_PAGE_SIZE, resetKey } = {}) {
   const [page, setPage] = useState(1);
   const total = items.length;
@@ -42,7 +38,6 @@ export function usePagination(items = [], { pageSize = DEFAULT_PAGE_SIZE, resetK
   };
 }
 
-/** Controles de paginação padrão do CRM */
 export function ListPagination({
   page,
   totalPages,
@@ -118,7 +113,6 @@ export function ListPagination({
   );
 }
 
-/** Lista genérica com paginação (render prop). */
 export function PaginatedItems({ items, pageSize = 10, resetKey, children, paginationClassName }) {
   const pager = usePagination(items, { pageSize, resetKey });
   return (
@@ -137,7 +131,6 @@ export function PaginatedItems({ items, pageSize = 10, resetKey, children, pagin
   );
 }
 
-/** Coluna de kanban com paginação própria. */
 export function KanbanColumnPager({ items, pageSize = 8, children }) {
   return (
     <PaginatedItems

@@ -4,7 +4,6 @@ import { Cliente } from "../Cliente/Cliente.js";
 
 const col = (name) => getDb().collection(name);
 
-/** Persistência e mapeamento da entidade Cliente e dados relacionados. */
 export const ClienteRepository = {
   async findAll() {
     const rows = omitMany(

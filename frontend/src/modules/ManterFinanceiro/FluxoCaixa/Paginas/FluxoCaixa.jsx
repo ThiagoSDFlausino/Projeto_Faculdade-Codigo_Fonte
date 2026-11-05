@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { FileSpreadsheet, ArrowDownCircle, ArrowUpCircle, Scale, Calculator } from "lucide-react";
+import { FileSpreadsheet, ArrowDownCircle, ArrowUpCircle, Scale, Calculator, Clock } from "lucide-react";
 import { toast } from "sonner";
 import api, { brl } from "@/lib/api";
 import { resolvePeriodRange, periodLabel } from "@/lib/period";
@@ -32,15 +32,18 @@ export default function FluxoCaixa() {
   });
 
   const entradas = fluxo?.entradas || [];
+  const aReceber = fluxo?.a_receber || [];
   const saidas = fluxo?.saidas || [];
   const inPager = usePagination(entradas, { pageSize: 10, resetKey: `${fromDate}-${toDate}-in` });
+  const pendPager = usePagination(aReceber, { pageSize: 10, resetKey: `${fromDate}-${toDate}-pend` });
   const outPager = usePagination(saidas, { pageSize: 10, resetKey: `${fromDate}-${toDate}-out` });
 
   const exportCsv = () => {
     if (!fluxo) return;
-    const rows = [["Tipo", "Data", "Descrição", "Categoria", "Valor", "Origem"]];
-    fluxo.entradas.forEach((e) => rows.push(["Entrada", e.data, e.descricao, e.categoria, e.valor, e.origem]));
-    fluxo.saidas.forEach((e) => rows.push(["Saída", e.data, e.descricao, e.categoria, e.valor, e.origem]));
+    const rows = [["Tipo", "Data", "Descrição", "Categoria", "Valor", "Origem", "Status Agenda"]];
+    fluxo.entradas.forEach((e) => rows.push(["Receita (Concluído)", e.data, e.descricao, e.categoria, e.valor, e.origem, e.status_agenda || "Concluído"]));
+    (fluxo.a_receber || []).forEach((e) => rows.push(["A receber (Confirmado)", e.data, e.descricao, e.categoria, e.valor, e.origem, e.status_agenda || "Confirmado"]));
+    fluxo.saidas.forEach((e) => rows.push(["Despesa", e.data, e.descricao, e.categoria, e.valor, e.origem, ""]));
     downloadCsv(`fluxo-caixa-${fromDate}-${toDate}.csv`, rows);
     toast.success("CSV exportado");
   };
@@ -49,7 +52,7 @@ export default function FluxoCaixa() {
     <div>
       <PageHeader
         title="Fluxo de Caixa"
-        subtitle={`Entradas e saídas do período · ${periodoTxt}`}
+        subtitle={`Receita = Agenda Concluído · A receber = Confirmado · Saídas = Despesas · ${periodoTxt}`}
         action={
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-xl" onClick={exportCsv} data-testid="export-csv-button">
@@ -57,7 +60,7 @@ export default function FluxoCaixa() {
             </Button>
             <Button asChild className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl">
               <Link to="/fechamento" data-testid="goto-fechamento-button">
-                <Calculator className="w-4 h-4 mr-1" /> Fechamento
+                <Calculator className="w-4 h-4 mr-1" /> Folha de Pagamento
               </Link>
             </Button>
           </div>
@@ -86,16 +89,20 @@ export default function FluxoCaixa() {
         testid="fluxo-filters"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <StatHero label="Entradas" value={brl(fluxo?.total_entradas || 0)} icon={ArrowDownCircle} color="emerald" delay={0} />
-        <StatHero label="Saídas" value={brl(fluxo?.total_saidas || 0)} icon={ArrowUpCircle} color="red" delay={0.05} />
-        <StatHero label="Saldo" value={brl(fluxo?.saldo || 0)} icon={Scale} color="sky" delay={0.1} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatHero label="Receita (Concluído)" value={brl(fluxo?.total_entradas || 0)} icon={ArrowDownCircle} color="emerald" delay={0} />
+        <StatHero label="A receber (Confirmado)" value={brl(fluxo?.total_a_receber || 0)} icon={Clock} color="amber" delay={0.05} />
+        <StatHero label="Despesas" value={brl(fluxo?.total_saidas || 0)} icon={ArrowUpCircle} color="red" delay={0.1} />
+        <StatHero label="Saldo" value={brl(fluxo?.saldo || 0)} icon={Scale} color="sky" delay={0.15} />
       </div>
 
       {isLoading ? <div className="h-40 ai-shimmer rounded-2xl" /> : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
           <Card className="overflow-hidden" data-testid="cashflow-in">
-            <div className="p-5 pb-2"><h3 className="font-display font-semibold">Entradas</h3></div>
+            <div className="p-5 pb-2">
+              <h3 className="font-display font-semibold">Receitas pagas</h3>
+              <p className="text-xs text-slate-400">Agenda com status Concluído</p>
+            </div>
             <div className="space-y-2 px-5 max-h-80 overflow-y-auto">
               {inPager.pageItems.map((e, i) => (
                 <div key={i} className="flex justify-between text-sm border-b border-rose-50 pb-2">
@@ -103,12 +110,33 @@ export default function FluxoCaixa() {
                   <p className="text-emerald-600 font-medium">{brl(e.valor)}</p>
                 </div>
               ))}
-              {entradas.length === 0 && <p className="text-sm text-slate-400 pb-4">Nenhuma entrada.</p>}
+              {entradas.length === 0 && <p className="text-sm text-slate-400 pb-4">Nenhuma receita concluída.</p>}
             </div>
             <ListPagination page={inPager.page} totalPages={inPager.totalPages} total={inPager.total} from={inPager.from} to={inPager.to} onPageChange={inPager.setPage} />
           </Card>
+
+          <Card className="overflow-hidden" data-testid="cashflow-pending">
+            <div className="p-5 pb-2">
+              <h3 className="font-display font-semibold">A receber</h3>
+              <p className="text-xs text-slate-400">Agenda com status Confirmado</p>
+            </div>
+            <div className="space-y-2 px-5 max-h-80 overflow-y-auto">
+              {pendPager.pageItems.map((e, i) => (
+                <div key={i} className="flex justify-between text-sm border-b border-rose-50 pb-2">
+                  <div><p className="text-slate-700">{e.descricao}</p><p className="text-xs text-slate-400">{e.data}</p></div>
+                  <p className="text-amber-600 font-medium">{brl(e.valor)}</p>
+                </div>
+              ))}
+              {aReceber.length === 0 && <p className="text-sm text-slate-400 pb-4">Nada pendente.</p>}
+            </div>
+            <ListPagination page={pendPager.page} totalPages={pendPager.totalPages} total={pendPager.total} from={pendPager.from} to={pendPager.to} onPageChange={pendPager.setPage} />
+          </Card>
+
           <Card className="overflow-hidden" data-testid="cashflow-out">
-            <div className="p-5 pb-2"><h3 className="font-display font-semibold">Saídas</h3></div>
+            <div className="p-5 pb-2">
+              <h3 className="font-display font-semibold">Despesas</h3>
+              <p className="text-xs text-slate-400">Cadastro Manter Despesas</p>
+            </div>
             <div className="space-y-2 px-5 max-h-80 overflow-y-auto">
               {outPager.pageItems.map((e, i) => (
                 <div key={i} className="flex justify-between text-sm border-b border-rose-50 pb-2">
@@ -116,7 +144,7 @@ export default function FluxoCaixa() {
                   <p className="text-red-500 font-medium">{brl(e.valor)}</p>
                 </div>
               ))}
-              {saidas.length === 0 && <p className="text-sm text-slate-400 pb-4">Nenhuma saída.</p>}
+              {saidas.length === 0 && <p className="text-sm text-slate-400 pb-4">Nenhuma despesa no período.</p>}
             </div>
             <ListPagination page={outPager.page} totalPages={outPager.totalPages} total={outPager.total} from={outPager.from} to={outPager.to} onPageChange={outPager.setPage} />
           </Card>
@@ -125,11 +153,13 @@ export default function FluxoCaixa() {
 
       <Card className="p-5 flex flex-wrap items-center justify-between gap-3 border-rose-100 bg-gradient-to-r from-rose-50/60 to-white">
         <div>
-          <p className="font-display font-semibold text-slate-800">Fechamento quinzenal</p>
-          <p className="text-sm text-slate-500">Consolide faturamento e despesas por período na tela de Fechamento.</p>
+          <p className="font-display font-semibold text-slate-800">Folha de Pagamento</p>
+          <p className="text-sm text-slate-500">
+            Consolida receitas concluídas e despesas do período por profissional.
+          </p>
         </div>
         <Button asChild variant="outline" className="rounded-xl border-rose-200">
-          <Link to="/fechamento">Abrir fechamento</Link>
+          <Link to="/fechamento">Gerar Folha de Pagamento</Link>
         </Button>
       </Card>
     </div>

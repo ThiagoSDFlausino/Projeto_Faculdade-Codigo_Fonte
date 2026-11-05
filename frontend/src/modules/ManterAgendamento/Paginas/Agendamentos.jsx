@@ -14,8 +14,31 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const empty = { cliente_name: "", procedure: "", procedure_id: "", professional_id: "", room: "Sala 1", status: "Agendado", value: "" };
+const empty = {
+  cliente_name: "",
+  procedure: "",
+  procedure_id: "",
+  professional_id: "",
+  room: "Sala 1",
+  status: "Agendado",
+  value: "",
+  observacoes: "",
+};
 const KANBAN = ["Agendado", "Confirmado", "Concluído", "Cancelado"];
+
+function addMinutesLocal(isoLocal, minutes) {
+  if (!isoLocal) return "";
+  const m = String(isoLocal).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return "";
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]));
+  d.setMinutes(d.getMinutes() + (Number(minutes) || 0));
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function inicioOf(a) {
+  return a.data_hora_inicio || a.datetime || "";
+}
 
 export default function Agendamentos() {
   const qc = useQueryClient();
@@ -23,7 +46,8 @@ export default function Agendamentos() {
   const isPro = user?.role === "profissional";
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
-  const [dt, setDt] = useState("");
+  const [dtInicio, setDtInicio] = useState("");
+  const [dtFim, setDtFim] = useState("");
   const [view, setView] = useState("lista");
   const [filterPro, setFilterPro] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -35,7 +59,14 @@ export default function Agendamentos() {
 
   const createMut = useMutation({
     mutationFn: (p) => api.post("/appointments", p),
-    onSuccess: () => { invalidateClienteImpact(qc, form.cliente_id || undefined); setOpen(false); setForm(empty); setDt(""); toast.success("Agendamento criado!"); },
+    onSuccess: () => {
+      invalidateClienteImpact(qc, form.cliente_id || undefined);
+      setOpen(false);
+      setForm(empty);
+      setDtInicio("");
+      setDtFim("");
+      toast.success("Agendamento criado!");
+    },
     onError: (e) => toast.error(e.response?.data?.detail || "Erro ao agendar"),
   });
   const updateMut = useMutation({
@@ -56,7 +87,7 @@ export default function Agendamentos() {
   const listPager = usePagination(filtered, { pageSize: 12, resetKey: `${filterPro}-${filterStatus}-${view}` });
 
   const pageGrouped = listPager.pageItems.reduce((acc, a) => {
-    const day = (a.datetime || "").slice(0, 10) || "Sem data";
+    const day = inicioOf(a).slice(0, 10) || "Sem data";
     (acc[day] = acc[day] || []).push(a);
     return acc;
   }, {});
@@ -78,7 +109,7 @@ export default function Agendamentos() {
     for (let i = 0; i < first.getDay(); i++) cells.push(null);
     for (let d = 1; d <= last.getDate(); d++) {
       const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      cells.push({ day: d, key, items: filtered.filter((a) => (a.datetime || "").startsWith(key)) });
+      cells.push({ day: d, key, items: filtered.filter((a) => inicioOf(a).startsWith(key)) });
     }
     return cells;
   }, [filtered]);
@@ -90,15 +121,69 @@ export default function Agendamentos() {
   };
 
   const payloadFrom = (a, status) => ({
-    cliente_id: a.cliente_id, cliente_name: a.cliente_name, professional_id: a.professional_id,
-    procedure: a.procedure, procedure_id: a.procedure_id, datetime: a.datetime, room: a.room, status, value: a.value,
+    cliente_id: a.cliente_id,
+    cliente_name: a.cliente_name,
+    professional_id: a.professional_id,
+    procedure: a.procedure,
+    procedure_id: a.procedure_id,
+    data_hora_inicio: inicioOf(a),
+    data_hora_fim: a.data_hora_fim || "",
+    datetime: inicioOf(a),
+    room: a.room,
+    observacoes: a.observacoes || "",
+    status,
+    value: a.valor_cobrado ?? a.value,
+    valor_cobrado: a.valor_cobrado ?? a.value,
   });
+
+  const professionalId = isPro ? user?.id : form.professional_id;
+  const selectedPro = professionals.find((p) => p.id === professionalId) || (isPro ? user : null);
+  const proceduresForPro = useMemo(() => {
+    const active = procedures.filter((p) => p.active !== false);
+    const allowed = selectedPro?.procedimento_ids || [];
+    if (!allowed.length) return active;
+    return active.filter((p) => allowed.includes(p.id));
+  }, [procedures, selectedPro]);
+
+  const onSelectProcedure = (v) => {
+    const p = procedures.find((x) => x.id === v);
+    const next = {
+      ...form,
+      procedure_id: v,
+      procedure: p?.name || "",
+      value: p ? p.price : form.value,
+    };
+    setForm(next);
+    if (dtInicio && p?.duration_min) {
+      setDtFim(addMinutesLocal(dtInicio, p.duration_min));
+    }
+  };
+
+  const onChangeInicio = (v) => {
+    setDtInicio(v);
+    const p = procedures.find((x) => x.id === form.procedure_id);
+    if (v && p?.duration_min) setDtFim(addMinutesLocal(v, p.duration_min));
+  };
+
+  const submitAgendamento = (e) => {
+    e.preventDefault();
+    const cliente = clientes.find((c) => c.name === form.cliente_name);
+    createMut.mutate({
+      ...form,
+      cliente_id: cliente?.id || form.cliente_id || "",
+      data_hora_inicio: dtInicio,
+      data_hora_fim: dtFim,
+      datetime: dtInicio,
+      value: parseFloat(form.value) || 0,
+      valor_cobrado: parseFloat(form.value) || 0,
+    });
+  };
 
   return (
     <div>
       <PageHeader
-        title={isPro ? "Minha Agenda" : "Agendamentos"}
-        subtitle="Lista, calendário e kanban de status"
+        title={isPro ? "Minha Agenda" : "Manter Agenda"}
+        subtitle="Cliente + profissional + procedimento · início, fim, valor e observações"
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -106,30 +191,40 @@ export default function Agendamentos() {
                 <Plus className="w-4 h-4 mr-1" /> Novo Agendamento
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-3xl border-rose-100">
+            <DialogContent className="rounded-3xl border-rose-100 max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display">Novo Agendamento</DialogTitle></DialogHeader>
-              <form onSubmit={(e) => { e.preventDefault(); createMut.mutate({ ...form, datetime: dt, value: parseFloat(form.value) || 0 }); }} className="space-y-3">
+              <form onSubmit={submitAgendamento} className="space-y-3">
                 <div>
                   <Label>Cliente</Label>
                   <Input data-testid="appt-client-input" className="mt-1" list="clientes-list" value={form.cliente_name} onChange={(e) => setForm({ ...form, cliente_name: e.target.value })} required />
                   <datalist id="clientes-list">{clientes.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
-                <div>
-                  <Label>Procedimento</Label>
-                  <Select value={form.procedure_id} onValueChange={(v) => { const p = procedures.find((x) => x.id === v); setForm({ ...form, procedure_id: v, procedure: p?.name || "", value: p ? p.price : form.value }); }}>
-                    <SelectTrigger data-testid="appt-procedure-select" className="mt-1"><SelectValue placeholder="Selecione o procedimento" /></SelectTrigger>
-                    <SelectContent>{procedures.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} — {brl(p.price)}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
                 {!isPro && (
                   <div>
                     <Label>Profissional</Label>
-                    <Select value={form.professional_id} onValueChange={(v) => setForm({ ...form, professional_id: v })}>
+                    <Select value={form.professional_id} onValueChange={(v) => setForm({ ...form, professional_id: v, procedure_id: "", procedure: "" })}>
                       <SelectTrigger data-testid="appt-professional-select" className="mt-1"><SelectValue placeholder="Selecione o profissional" /></SelectTrigger>
                       <SelectContent>{professionals.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 )}
+                <div>
+                  <Label>Procedimento</Label>
+                  <Select value={form.procedure_id} onValueChange={onSelectProcedure}>
+                    <SelectTrigger data-testid="appt-procedure-select" className="mt-1"><SelectValue placeholder="Selecione o procedimento" /></SelectTrigger>
+                    <SelectContent>{proceduresForPro.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} — {brl(p.price)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Data/Hora início</Label>
+                    <Input data-testid="appt-datetime-input" type="datetime-local" className="mt-1" value={dtInicio} onChange={(e) => onChangeInicio(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label>Data/Hora fim</Label>
+                    <Input type="datetime-local" className="mt-1" value={dtFim} onChange={(e) => setDtFim(e.target.value)} />
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>Sala</Label>
@@ -142,9 +237,12 @@ export default function Agendamentos() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Valor (R$)</Label><Input type="number" step="0.01" className="mt-1" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
+                  <div><Label>Valor cobrado (R$)</Label><Input type="number" step="0.01" className="mt-1" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
                 </div>
-                <div><Label>Data e Hora</Label><Input data-testid="appt-datetime-input" type="datetime-local" className="mt-1" value={dt} onChange={(e) => setDt(e.target.value)} required /></div>
+                <div>
+                  <Label>Observações</Label>
+                  <Input className="mt-1" value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} placeholder="Opcional" />
+                </div>
                 <DialogFooter><Button data-testid="appt-submit-button" type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl">Salvar</Button></DialogFooter>
               </form>
             </DialogContent>
@@ -196,15 +294,17 @@ export default function Agendamentos() {
                             <div className="flex items-center gap-4">
                               <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-rose-50 text-rose-500">
                                 <Clock className="w-4 h-4" />
-                                <span className="text-sm font-bold mt-1">{(a.datetime || "").slice(11, 16) || "--"}</span>
+                                <span className="text-sm font-bold mt-1">{inicioOf(a).slice(11, 16) || "--"}</span>
+                                {a.data_hora_fim ? <span className="text-[10px] text-rose-400">{a.data_hora_fim.slice(11, 16)}</span> : null}
                               </div>
                               <div>
                                 <p className="font-semibold text-slate-800">{a.procedure}</p>
                                 <p className="text-sm text-slate-500 flex items-center gap-1"><User className="w-3 h-3" /> {a.cliente_name}</p>
                                 <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
                                   <span>{a.professional || "—"}</span> • <MapPin className="w-3 h-3" /> {a.room}
-                                  {a.value ? <span className="text-emerald-600 font-medium">• {brl(a.value)}</span> : null}
+                                  {(a.valor_cobrado ?? a.value) ? <span className="text-emerald-600 font-medium">• {brl(a.valor_cobrado ?? a.value)}</span> : null}
                                 </p>
+                                {a.observacoes ? <p className="text-xs text-slate-400 mt-0.5 italic truncate max-w-md">{a.observacoes}</p> : null}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -229,7 +329,6 @@ export default function Agendamentos() {
         )
       ) : view === "calendario" ? (
         <Card className="p-4" data-testid="appointments-calendar">
-          {/* Mobile: agenda do dia (hoje) em lista */}
           <div className="md:hidden space-y-3">
             <p className="text-sm font-semibold text-slate-600">
               Hoje — {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
@@ -237,8 +336,8 @@ export default function Agendamentos() {
             {(() => {
               const todayKey = new Date().toISOString().slice(0, 10);
               const todayItems = filtered
-                .filter((a) => (a.datetime || "").startsWith(todayKey))
-                .sort((a, b) => String(a.datetime).localeCompare(String(b.datetime)));
+                .filter((a) => inicioOf(a).startsWith(todayKey))
+                .sort((a, b) => String(inicioOf(a)).localeCompare(String(inicioOf(b))));
               if (!todayItems.length) {
                 return <p className="text-sm text-slate-400 py-6 text-center">Nada agendado para hoje. Use a lista ou o calendário no tablet/desktop.</p>;
               }
@@ -246,7 +345,7 @@ export default function Agendamentos() {
                 <Card key={a.id} className="p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-slate-800">{(a.datetime || "").slice(11, 16)} · {a.procedure}</p>
+                      <p className="font-semibold text-slate-800">{inicioOf(a).slice(11, 16)}{a.data_hora_fim ? `–${a.data_hora_fim.slice(11, 16)}` : ""} · {a.procedure}</p>
                       <p className="text-sm text-slate-500">{a.cliente_name}</p>
                       <p className="text-xs text-slate-400 mt-0.5">{a.professional || "—"} · {a.room}</p>
                     </div>
@@ -257,7 +356,6 @@ export default function Agendamentos() {
             })()}
             <p className="text-xs text-slate-400 text-center pt-2">Calendário mensal disponível em telas maiores.</p>
           </div>
-          {/* Desktop/tablet: grade 7 colunas */}
           <div className="hidden md:grid grid-cols-7 gap-2">
             {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => <div key={d} className="text-center text-xs font-semibold text-slate-400 py-1">{d}</div>)}
             {calendarDays.map((cell, idx) => (
@@ -266,7 +364,7 @@ export default function Agendamentos() {
                   <>
                     <p className="text-xs font-semibold text-slate-500 px-1">{cell.day}</p>
                     {cell.items.slice(0, 3).map((a) => (
-                      <div key={a.id} className="text-[10px] truncate px-1 py-0.5 rounded bg-rose-50 text-rose-600 mb-0.5">{(a.datetime || "").slice(11, 16)} {a.cliente_name}</div>
+                      <div key={a.id} className="text-[10px] truncate px-1 py-0.5 rounded bg-rose-50 text-rose-600 mb-0.5">{inicioOf(a).slice(11, 16)} {a.cliente_name}</div>
                     ))}
                     {cell.items.length > 3 && <p className="text-[10px] text-slate-400 px-1">+{cell.items.length - 3}</p>}
                   </>
@@ -285,7 +383,7 @@ export default function Agendamentos() {
                   {(a) => (
                     <Card key={a.id} className="p-3">
                       <p className="font-semibold text-sm text-slate-800">{a.procedure}</p>
-                      <p className="text-xs text-slate-400">{a.cliente_name} · {(a.datetime || "").slice(0, 16).replace("T", " ")}</p>
+                      <p className="text-xs text-slate-400">{a.cliente_name} · {inicioOf(a).slice(0, 16).replace("T", " ")}</p>
                       <Select value={a.status} onValueChange={(v) => updateMut.mutate({ id: a.id, payload: payloadFrom(a, v) })}>
                         <SelectTrigger className="mt-2 h-10 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>{KANBAN.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>

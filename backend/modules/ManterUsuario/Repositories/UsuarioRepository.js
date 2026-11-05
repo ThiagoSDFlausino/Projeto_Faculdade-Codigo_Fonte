@@ -4,7 +4,6 @@ import { Usuario } from "../Usuario/Usuario.js";
 
 const users = () => getDb().collection("users");
 
-/** Persistência e mapeamento da entidade Usuario. */
 export const UsuarioRepository = {
   count() {
     return users().countDocuments();

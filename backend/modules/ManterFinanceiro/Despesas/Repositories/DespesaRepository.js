@@ -1,26 +1,25 @@
 import { getDb } from "../../../../src/db.js";
 import { omitId, omitMany } from "../../../../src/utils.js";
-import { Lancamento } from "../Lancamento/Lancamento.js";
+import { Despesa } from "../Despesa/Despesa.js";
 
 const transactions = () => getDb().collection("transactions");
 
-/** Persistência e mapeamento da entidade Lancamento. */
-export const LancamentoRepository = {
+export const DespesaRepository = {
   async findAll() {
     const rows = omitMany(
       await transactions().find({}, { projection: { _id: 0 } }).sort({ due_date: -1 }).toArray(),
     );
-    return rows.map((row) => new Lancamento(row));
+    return rows.map((row) => new Despesa(row));
   },
 
   async findById(id) {
     const row = omitId(await transactions().findOne({ id }, { projection: { _id: 0 } }));
-    return row ? new Lancamento(row) : null;
+    return row ? new Despesa(row) : null;
   },
 
-  async insert(lancamento) {
-    await transactions().insertOne(lancamento.toDocument());
-    return lancamento;
+  async insert(despesa) {
+    await transactions().insertOne(despesa.toDocument());
+    return despesa;
   },
 
   async update(id, data) {

@@ -42,9 +42,11 @@ export const UsuarioService = {
       password_hash: hashPassword(password),
       name: String(name).trim(),
       role: total === 0 ? PerfilUsuario.ADMIN : PerfilUsuario.PROFISSIONAL,
+      funcao: "",
       specialty: "",
       commission_pct: 0,
       photo: "",
+      procedimento_ids: [],
       active: true,
       created_at: nowIso(),
     });
@@ -74,15 +76,19 @@ export const UsuarioService = {
     if (!isPerfilUsuario(role)) throw httpError(400, "Perfil inválido");
     if (await UsuarioRepository.findByEmail(email)) throw httpError(400, "E-mail já cadastrado");
 
+    const funcao = body.funcao || body.specialty || "";
+    const procedimentoIds = Array.isArray(body.procedimento_ids) ? body.procedimento_ids : [];
     const usuario = new Usuario({
       id: id(),
       email,
       password_hash: hashPassword(body.password),
       name: String(body.name).trim(),
       role,
-      specialty: body.specialty || "",
+      funcao,
+      specialty: funcao,
       commission_pct: body.commission_pct ?? 30,
       photo: body.photo || "",
+      procedimento_ids: procedimentoIds,
       active: true,
       created_at: nowIso(),
     });
@@ -94,11 +100,17 @@ export const UsuarioService = {
     const existing = await UsuarioRepository.findById(idMembro);
     if (!existing) throw httpError(404, "Membro não encontrado");
     if (!isPerfilUsuario(body.role)) throw httpError(400, "Perfil inválido");
+    const funcao = body.funcao ?? body.specialty ?? existing.funcao ?? "";
+    const procedimentoIds = Array.isArray(body.procedimento_ids)
+      ? body.procedimento_ids
+      : existing.procedimentoIds || [];
     const data = {
       name: body.name,
       role: body.role,
-      specialty: body.specialty || "",
+      funcao,
+      specialty: funcao,
       commission_pct: body.commission_pct ?? 30,
+      procedimento_ids: procedimentoIds,
       active: body.active !== false,
       photo: body.photo || "",
     };

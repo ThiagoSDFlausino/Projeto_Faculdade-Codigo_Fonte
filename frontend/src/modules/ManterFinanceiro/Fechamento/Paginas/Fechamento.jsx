@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
-  Calendar, Check, Calculator, ArrowRight, Users, FileText, TrendingUp, Wallet, Scale, Trash2,
+  Calendar, Check, Calculator, ArrowRight, Users, FileText, TrendingUp, Wallet, Scale, Trash2, Landmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import api, { brl } from "@/lib/api";
@@ -95,9 +96,9 @@ export default function Fechamento() {
       qc.invalidateQueries({ queryKey: ["fechamentos"] });
       qc.invalidateQueries({ queryKey: ["fechamento-preview"] });
       setConfirmOpen(false);
-      toast.success("Fechamento gerado com sucesso");
+      toast.success("Folha de Pagamento gerada com sucesso");
     },
-    onError: (e) => toast.error(e.response?.data?.detail || "Erro ao gerar fechamento"),
+    onError: (e) => toast.error(e.response?.data?.detail || "Erro ao gerar Folha de Pagamento"),
   });
 
   const delMut = useMutation({
@@ -106,7 +107,7 @@ export default function Fechamento() {
       invalidateClienteImpact(qc);
       qc.invalidateQueries({ queryKey: ["fechamentos"] });
       qc.invalidateQueries({ queryKey: ["fechamento-preview"] });
-      toast.success("Fechamento removido — sessões liberadas");
+      toast.success("Folha removida — agendamentos liberados");
     },
     onError: (e) => toast.error(e.response?.data?.detail || "Erro ao remover"),
   });
@@ -114,10 +115,15 @@ export default function Fechamento() {
   return (
     <div>
       <PageHeader
-        title="Fechamento Financeiro"
-        subtitle="Fechamento quinzenal: faturamento, despesas e lucro líquido"
+        title="Folha de Pagamento"
+        subtitle="Caso de uso Adm: gera a folha a partir do Fluxo de Caixa (extend)"
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" className="rounded-xl border-rose-200">
+              <Link to="/fluxo-caixa">
+                <Landmark className="w-4 h-4 mr-1" /> Consultar Fluxo de Caixa
+              </Link>
+            </Button>
             <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
               <SelectTrigger className="w-[110px] rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -187,7 +193,7 @@ export default function Fechamento() {
               </h3>
               <p className="text-xs text-slate-400 mb-4">{preview?.total_atendimentos || 0} atendimentos no período</p>
               {(preview?.por_profissional || []).length === 0 ? (
-                <p className="text-sm text-slate-400">Nenhuma sessão pendente neste período.</p>
+                <p className="text-sm text-slate-400">Nenhum agendamento concluído pendente neste período.</p>
               ) : (
                 <div className="space-y-3">
                   {preview.por_profissional.map((p) => (
@@ -211,7 +217,7 @@ export default function Fechamento() {
                   <h3 className="font-display font-semibold text-slate-800 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-rose-400" /> Atendimentos do período
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Sessões ainda não vinculadas a um fechamento</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Agendamentos Concluídos ainda não vinculados à folha</p>
                 </div>
                 {!isPeriodClosed && (
                   <Button
@@ -219,7 +225,7 @@ export default function Fechamento() {
                     onClick={() => setConfirmOpen(true)}
                     data-testid="generate-fechamento-button"
                   >
-                    <Check className="w-4 h-4 mr-1" /> Gerar fechamento
+                    <Check className="w-4 h-4 mr-1" /> Gerar Folha de Pagamento
                   </Button>
                 )}
               </div>
@@ -265,11 +271,11 @@ export default function Fechamento() {
 
       <Card className="overflow-hidden">
         <div className="p-5 pb-2">
-          <h3 className="font-display font-semibold text-slate-800">Histórico de fechamentos</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Quinzenas já consolidadas. Remover devolve as sessões ao aberto.</p>
+          <h3 className="font-display font-semibold text-slate-800">Histórico de Folhas de Pagamento</h3>
+          <p className="text-xs text-slate-400 mt-0.5">Quinzenas já consolidadas. Remover devolve os agendamentos ao aberto.</p>
         </div>
         {fechamentos.length === 0 ? (
-          <p className="text-slate-400 text-sm px-5 pb-5">Nenhum fechamento gerado ainda.</p>
+          <p className="text-slate-400 text-sm px-5 pb-5">Nenhuma folha gerada ainda.</p>
         ) : (
           <>
             <div className="space-y-2 px-5 pb-2">
@@ -284,8 +290,8 @@ export default function Fechamento() {
                   <button
                     type="button"
                     className="p-2 rounded-lg text-red-400 hover:bg-red-50"
-                    title="Remover fechamento"
-                    onClick={() => window.confirm("Remover este fechamento e liberar as sessões?") && delMut.mutate(f.id)}
+                    title="Remover Folha de Pagamento"
+                    onClick={() => window.confirm("Remover esta Folha de Pagamento e liberar os agendamentos?") && delMut.mutate(f.id)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -307,9 +313,9 @@ export default function Fechamento() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="rounded-3xl border-rose-100">
           <DialogHeader>
-            <DialogTitle className="font-display">Confirmar fechamento</DialogTitle>
+            <DialogTitle className="font-display">Confirmar Folha de Pagamento</DialogTitle>
             <DialogDescription>
-              Ao gerar o fechamento de {formatDate(selected?.inicio)} a {formatDate(selected?.fim)}, as sessões listadas serão vinculadas a este período e não entrarão em outro fechamento. Esta ação consolida o resultado da quinzena.
+              Ao gerar a Folha de {formatDate(selected?.inicio)} a {formatDate(selected?.fim)}, o sistema consulta o Fluxo de Caixa do período (relação extend) e vincula os agendamentos Concluídos listados. Esta ação consolida o resultado da quinzena.
             </DialogDescription>
           </DialogHeader>
           {preview && (
@@ -329,7 +335,7 @@ export default function Fechamento() {
               onClick={() => fecharMut.mutate()}
               data-testid="confirm-fechamento-button"
             >
-              {fecharMut.isPending ? "Gerando..." : "Confirmar fechamento"}
+              {fecharMut.isPending ? "Gerando..." : "Confirmar Folha de Pagamento"}
             </Button>
           </DialogFooter>
         </DialogContent>

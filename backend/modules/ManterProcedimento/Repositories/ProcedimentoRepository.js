@@ -4,7 +4,6 @@ import { Procedimento } from "../Procedimento/Procedimento.js";
 
 const procedures = () => getDb().collection("procedures");
 
-/** Persistência e mapeamento da entidade Procedimento. */
 export const ProcedimentoRepository = {
   async findAll() {
     const rows = omitMany(

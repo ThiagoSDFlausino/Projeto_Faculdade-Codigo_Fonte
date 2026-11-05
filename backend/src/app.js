@@ -3,7 +3,7 @@ import { createUsuarioRouter } from "../modules/ManterUsuario/Controller/Usuario
 import { createClienteRouter } from "../modules/ManterClientes/Controller/ClienteController.js";
 import { createProcedimentoRouter } from "../modules/ManterProcedimento/Controller/ProcedimentoController.js";
 import { createAgendaRouter } from "../modules/ManterAgendamento/Controller/AgendaController.js";
-import { createLancamentoRouter } from "../modules/ManterFinanceiro/Lancamentos/Controller/LancamentoController.js";
+import { createDespesaRouter } from "../modules/ManterFinanceiro/Despesas/Controller/DespesaController.js";
 import { createFluxoRouter } from "../modules/ManterFinanceiro/FluxoCaixa/Controller/FluxoController.js";
 import { createFechamentoRouter } from "../modules/ManterFinanceiro/Fechamento/Controller/FechamentoController.js";
 import cors from "cors";
@@ -17,7 +17,6 @@ import {
   isProduction,
 } from "./security.js";
 
-/** Cria o app Express (sem listen) — usado por index e pelos testes. */
 export function createApp({ skipSecureAssert = false } = {}) {
   if (!skipSecureAssert) assertSecureConfig();
 
@@ -54,7 +53,7 @@ export function createApp({ skipSecureAssert = false } = {}) {
   app.use("/api", createClienteRouter(Router));
   app.use("/api", createProcedimentoRouter(Router));
   app.use("/api", createAgendaRouter(Router));
-  app.use("/api", createLancamentoRouter(Router));
+  app.use("/api", createDespesaRouter(Router));
   app.use("/api", createFluxoRouter(Router));
   app.use("/api", createFechamentoRouter(Router));
   app.use("/api", dashboardRoutes);

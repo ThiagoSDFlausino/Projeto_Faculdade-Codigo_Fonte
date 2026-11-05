@@ -54,7 +54,6 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-10 sm:px-6">
-      {/* Full-bleed atmosphere */}
       <div className="absolute inset-0">
         <img
           src={HERO}
@@ -66,7 +65,6 @@ export default function Login() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_85%_75%,rgba(196,120,90,0.22),transparent_50%)]" />
       </div>
 
-      {/* Soft floating orbs */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-rose-400/25 blur-3xl"
@@ -86,7 +84,6 @@ export default function Login() {
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 w-full max-w-[420px]"
       >
-        {/* Brand ÔÇö hero signal */}
         <div className="mb-8 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
@@ -104,7 +101,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Glass form panel ÔÇö interaction container */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,7 +173,7 @@ export default function Login() {
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "quick-access-admin", email: "admin@faculdade.com", label: "Dono" },
+                  { id: "quick-access-admin", email: "admin@faculdade.com", label: "Adm" },
                   { id: "quick-access-secretaria", email: "recepcao@faculdade.com", label: "Recepção" },
                   { id: "quick-access-profissional", email: "juliana@faculdade.com", label: "Profissional" },
                 ].map((item) => (

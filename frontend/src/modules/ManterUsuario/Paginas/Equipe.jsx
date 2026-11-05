@@ -14,9 +14,42 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const ROLE_LABEL = { admin: "Dono / Gestor", secretaria: "Recepção", profissional: "Profissional" };
+const ROLE_LABEL = { admin: "Adm", secretaria: "Recepção", profissional: "Profissional" };
 const ROLE_BADGE = { admin: "bg-purple-50 text-purple-600", secretaria: "bg-sky-50 text-sky-600", profissional: "bg-rose-50 text-rose-600" };
-const emptyNew = { name: "", email: "", password: "", role: "profissional", specialty: "", commission_pct: 30 };
+const emptyNew = {
+  name: "",
+  email: "",
+  password: "",
+  role: "profissional",
+  funcao: "",
+  commission_pct: 30,
+  procedimento_ids: [],
+};
+
+function ProcedimentoChecklist({ procedures, selected, onChange }) {
+  const toggle = (id) => {
+    if (selected.includes(id)) onChange(selected.filter((x) => x !== id));
+    else onChange([...selected, id]);
+  };
+  if (!procedures.length) {
+    return <p className="text-xs text-slate-400 mt-1">Cadastre procedimentos para vincular ao profissional.</p>;
+  }
+  return (
+    <div className="mt-1 max-h-36 overflow-y-auto rounded-xl border border-rose-100 p-2 space-y-1">
+      {procedures.map((p) => (
+        <label key={p.id} className="flex items-center gap-2 text-sm text-slate-600 px-1 py-1 rounded-lg hover:bg-rose-50 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded border-rose-200 text-rose-500"
+            checked={selected.includes(p.id)}
+            onChange={() => toggle(p.id)}
+          />
+          <span className="truncate">{p.name}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
 
 export default function Equipe() {
   const qc = useQueryClient();
@@ -26,11 +59,15 @@ export default function Equipe() {
   const [form, setForm] = useState(emptyNew);
 
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: async () => (await api.get("/staff")).data });
+  const { data: procedures = [] } = useQuery({
+    queryKey: ["procedures"],
+    queryFn: async () => (await api.get("/procedures")).data,
+  });
   const pager = usePagination(staff, { pageSize: 12 });
 
   const createMut = useMutation({
     mutationFn: (p) => api.post("/staff", p),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["staff"] }); setOpen(false); setForm(emptyNew); toast.success("Membro adicionado!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["staff"] }); setOpen(false); setForm(emptyNew); toast.success("Usuário adicionado!"); },
     onError: (e) => toast.error(e.response?.data?.detail || "Erro ao adicionar"),
   });
   const updateMut = useMutation({
@@ -44,23 +81,40 @@ export default function Equipe() {
     onError: (e) => toast.error(e.response?.data?.detail || "Erro"),
   });
 
-  const startEdit = (m) => setEditing({ ...m, password: "" });
+  const startEdit = (m) => setEditing({
+    ...m,
+    password: "",
+    funcao: m.funcao || m.specialty || "",
+    procedimento_ids: m.procedimento_ids || [],
+  });
+
+  const procNames = (ids = []) => {
+    if (!ids.length) return "Todos os procedimentos";
+    return ids.map((id) => procedures.find((p) => p.id === id)?.name || id).join(", ");
+  };
 
   return (
     <div>
       <PageHeader
-        title="Equipe"
-        subtitle="Gerencie acessos: cada perfil não apenas o que precisa"
+        title="Manter Usuários"
+        subtitle="Caso de uso exclusivo do Adm: perfis Adm, Recepção e Profissional"
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button data-testid="add-staff-button" className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-200">
-                <Plus className="w-4 h-4 mr-1" /> Novo Membro
+                <Plus className="w-4 h-4 mr-1" /> Novo Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-3xl border-rose-100">
-              <DialogHeader><DialogTitle className="font-display">Novo Membro da Equipe</DialogTitle></DialogHeader>
-              <form onSubmit={(e) => { e.preventDefault(); createMut.mutate({ ...form, commission_pct: parseFloat(form.commission_pct) || 0 }); }} className="space-y-3">
+            <DialogContent className="rounded-3xl border-rose-100 max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle className="font-display">Novo Usuário</DialogTitle></DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                createMut.mutate({
+                  ...form,
+                  specialty: form.funcao,
+                  commission_pct: parseFloat(form.commission_pct) || 0,
+                });
+              }} className="space-y-3">
                 <div><Label>Nome</Label><Input data-testid="staff-name-input" className="mt-1" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>E-mail</Label><Input data-testid="staff-email-input" type="email" className="mt-1" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
@@ -85,7 +139,7 @@ export default function Equipe() {
                     <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                       <SelectTrigger data-testid="staff-role-select" className="mt-1"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Dono / Gestor</SelectItem>
+                        <SelectItem value="admin">Adm</SelectItem>
                         <SelectItem value="secretaria">Recepção</SelectItem>
                         <SelectItem value="profissional">Profissional</SelectItem>
                       </SelectContent>
@@ -93,7 +147,21 @@ export default function Equipe() {
                   </div>
                   <div><Label>Comissão (%)</Label><Input type="number" className="mt-1" value={form.commission_pct} onChange={(e) => setForm({ ...form, commission_pct: e.target.value })} /></div>
                 </div>
-                <div><Label>Especialidade</Label><Input className="mt-1" value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex: Biomédica Esteta" /></div>
+                <div>
+                  <Label>Função</Label>
+                  <Input className="mt-1" value={form.funcao} onChange={(e) => setForm({ ...form, funcao: e.target.value })} placeholder="Ex: Biomédica Esteta" />
+                </div>
+                {form.role === "profissional" && (
+                  <div>
+                    <Label>Procedimentos habilitados</Label>
+                    <ProcedimentoChecklist
+                      procedures={procedures.filter((p) => p.active !== false)}
+                      selected={form.procedimento_ids}
+                      onChange={(procedimento_ids) => setForm({ ...form, procedimento_ids })}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">Vazio = pode realizar qualquer procedimento.</p>
+                  </div>
+                )}
                 <DialogFooter><Button data-testid="staff-submit-button" type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl">Salvar</Button></DialogFooter>
               </form>
             </DialogContent>
@@ -102,10 +170,10 @@ export default function Equipe() {
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-36 rounded-2xl ai-shimmer" />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-36 rounded-2xl ai-shimmer" />)}</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="staff-list">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="staff-list">
             {pager.pageItems.map((m, i) => (
               <motion.div key={m.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                 <Card className="p-5">
@@ -119,13 +187,20 @@ export default function Equipe() {
                     {!m.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Inativo</span>}
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-rose-50">
-                    <div>
+                    <div className="min-w-0">
                       <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[m.role]}`}>
                         <ShieldCheck className="w-3 h-3" /> {ROLE_LABEL[m.role]}
                       </span>
-                      {m.role === "profissional" && <p className="text-xs text-slate-400 mt-1">{m.specialty} · {m.commission_pct}%</p>}
+                      {(m.funcao || m.specialty) && (
+                        <p className="text-xs text-slate-400 mt-1 truncate">{m.funcao || m.specialty}{m.role === "profissional" ? ` · ${m.commission_pct}%` : ""}</p>
+                      )}
+                      {m.role === "profissional" && (
+                        <p className="text-[10px] text-slate-400 mt-0.5 truncate" title={procNames(m.procedimento_ids)}>
+                          {procNames(m.procedimento_ids)}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 shrink-0">
                       <button data-testid={`edit-staff-${m.id}`} onClick={() => startEdit(m)} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"><Pencil className="w-4 h-4" /></button>
                       {m.id !== user.id && (
                         <button data-testid={`delete-staff-${m.id}`} onClick={() => delMut.mutate(m.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
@@ -145,16 +220,18 @@ export default function Equipe() {
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="rounded-3xl border-rose-100">
-          <DialogHeader><DialogTitle className="font-display">Editar Membro</DialogTitle></DialogHeader>
+        <DialogContent className="rounded-3xl border-rose-100 max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display">Editar Usuário</DialogTitle></DialogHeader>
           {editing && (
             <form onSubmit={(e) => {
               e.preventDefault();
               const p = {
                 name: editing.name,
                 role: editing.role,
-                specialty: editing.specialty,
+                funcao: editing.funcao,
+                specialty: editing.funcao,
                 commission_pct: parseFloat(editing.commission_pct) || 0,
+                procedimento_ids: editing.procedimento_ids || [],
                 active: editing.active,
                 photo: editing.photo || "",
               };
@@ -180,7 +257,7 @@ export default function Equipe() {
                   <Select value={editing.role} onValueChange={(v) => setEditing({ ...editing, role: v })}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Dono / Gestor</SelectItem>
+                      <SelectItem value="admin">Adm</SelectItem>
                       <SelectItem value="secretaria">Recepção</SelectItem>
                       <SelectItem value="profissional">Profissional</SelectItem>
                     </SelectContent>
@@ -188,7 +265,20 @@ export default function Equipe() {
                 </div>
                 <div><Label>Comissão (%)</Label><Input type="number" className="mt-1" value={editing.commission_pct} onChange={(e) => setEditing({ ...editing, commission_pct: e.target.value })} /></div>
               </div>
-              <div><Label>Especialidade</Label><Input className="mt-1" value={editing.specialty || ""} onChange={(e) => setEditing({ ...editing, specialty: e.target.value })} /></div>
+              <div>
+                <Label>Função</Label>
+                <Input className="mt-1" value={editing.funcao || ""} onChange={(e) => setEditing({ ...editing, funcao: e.target.value })} />
+              </div>
+              {editing.role === "profissional" && (
+                <div>
+                  <Label>Procedimentos habilitados</Label>
+                  <ProcedimentoChecklist
+                    procedures={procedures.filter((p) => p.active !== false)}
+                    selected={editing.procedimento_ids || []}
+                    onChange={(procedimento_ids) => setEditing({ ...editing, procedimento_ids })}
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2"><Switch checked={editing.active} onCheckedChange={(v) => setEditing({ ...editing, active: v })} /><Label>Ativo</Label></div>
               <DialogFooter><Button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl">Salvar</Button></DialogFooter>
             </form>

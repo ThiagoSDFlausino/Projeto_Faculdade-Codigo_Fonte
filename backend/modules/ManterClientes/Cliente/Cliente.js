@@ -10,7 +10,7 @@ export class Cliente {
     this.photo = data.photo || "";
     this.tags = Array.isArray(data.tags) ? data.tags : [];
     this.status = data.status || StatusCliente.ATIVO;
-    this.notes = data.notes || "";
+    this.notes = data.notes || data.observacoes || "";
     this.totalSpent = data.total_spent ?? data.totalSpent ?? 0;
     this.createdAt = data.created_at || data.createdAt || null;
   }
@@ -26,6 +26,7 @@ export class Cliente {
       tags: this.tags,
       status: this.status,
       notes: this.notes,
+      observacoes: this.notes,
       total_spent: this.totalSpent,
       created_at: this.createdAt,
     };

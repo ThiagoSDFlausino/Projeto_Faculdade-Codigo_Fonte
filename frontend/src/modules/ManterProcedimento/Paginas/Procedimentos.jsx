@@ -92,8 +92,8 @@ export default function Procedimentos() {
   return (
     <div>
       <PageHeader
-        title="Procedimentos"
-        subtitle="Catálogo + quanto cada um faturou neste mês"
+        title="Manter Procedimentos"
+        subtitle="Caso de uso exclusivo do Adm · catálogo e faturamento do mês"
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

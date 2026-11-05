@@ -13,7 +13,6 @@ export function isProduction() {
   return process.env.NODE_ENV === "production";
 }
 
-/** Valida JWT/CORS antes de subir a API. Em produção falha se estiver frágil. */
 export function assertSecureConfig() {
   const secret = String(process.env.JWT_SECRET || "").trim();
   const weak = !secret || WEAK_SECRETS.has(secret) || secret.length < 24;
@@ -59,7 +58,6 @@ export function getCorsOrigins() {
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-/** Em desenvolvimento, localhost em qualquer porta (3000, 3001, …) pode chamar a API. */
 export function isAllowedOrigin(origin) {
   const origins = getCorsOrigins();
   if (!origin || origins.includes("*") || origins.includes(origin)) return true;
@@ -67,7 +65,6 @@ export function isAllowedOrigin(origin) {
   return false;
 }
 
-/** Regras mínimas de senha (clínica / equipe). */
 export function assertPasswordPolicy(password) {
   const p = String(password || "");
   if (p.length < 8) {
@@ -84,7 +81,6 @@ export function assertPasswordPolicy(password) {
   }
 }
 
-/** Limite agressivo só em login/register. */
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: Number(process.env.AUTH_RATE_LIMIT || 30),
@@ -93,7 +89,6 @@ export const authRateLimit = rateLimit({
   message: { detail: "Muitas tentativas. Aguarde alguns minutos e tente de novo." },
 });
 
-/** Limite geral da API (proteção básica contra abuso). */
 export const apiRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: Number(process.env.API_RATE_LIMIT || 300),

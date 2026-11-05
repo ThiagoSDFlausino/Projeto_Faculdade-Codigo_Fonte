@@ -1,4 +1,3 @@
-/** DTO de resumo do fluxo de caixa. */
 export class Fluxo {
   constructor(data = {}) {
     this.entradas = data.entradas || [];
