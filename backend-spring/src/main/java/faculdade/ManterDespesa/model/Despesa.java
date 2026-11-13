@@ -6,11 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import faculdade.ManterUsuario.model.Usuario;
+import jakarta.persistence.ManyToOne;
 
 @Getter
 @Setter
@@ -20,12 +21,13 @@ public class Despesa {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private @Nullable Integer id;
-    @NotBlank
+    @NotNull
     private Date data;
     private String descricao;
-    @NotBlank
+    @NotNull
     private Float valor;
 
+    @ManyToOne
     private Usuario usuario;
 
     public Despesa() {}
