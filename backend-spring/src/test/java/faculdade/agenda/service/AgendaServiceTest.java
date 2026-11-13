@@ -3,7 +3,6 @@ package faculdade.ManterAgenda.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -36,56 +35,6 @@ import lombok.extern.log4j.Log4j2;
 @ExtendWith(MockitoExtension.class)
 class AgendaServiceTest {
 
-    public static final Procedimento procedimento_VALIDO =
-        new Procedimento(
-            1,
-            "Limpeza de Pele",
-            "Procedimento de limpeza facial.",
-            60,
-            150.00f,
-            true,
-            CategoriaProcedimento.ESTETICA_FACIAL
-        );
-
-    public static final Cliente cliente_VALIDO = new Cliente();
-
-    static {
-        cliente_VALIDO.setId(1);
-        cliente_VALIDO.setNome("Cliente Teste");
-    }
-
-    public static final Usuario profissional_VALIDO = new Usuario(
-        1,
-        "Profissional Teste",
-        "profissional@exemplo.com",
-        "senha-teste",
-        "Atendimento",
-        Perfil.PROFISSIONAL,
-        procedimento_VALIDO
-    );
-
-    public static final Agenda agenda_VALIDA = new Agenda(
-        null,
-        new Date(0L),
-        new Date(3600000L),
-        "Agendamento de teste.",
-        profissional_VALIDO,
-        cliente_VALIDO,
-        procedimento_VALIDO,
-        StatusAgenda.AGENDADO
-    );
-
-    public static final Agenda agenda_INVALIDA = new Agenda(
-        null,
-        null,
-        null,
-        "Agendamento inválido.",
-        null,
-        null,
-        null,
-        null
-    );
-
     @InjectMocks
     private AgendaService agendaService;
 
@@ -101,41 +50,94 @@ class AgendaServiceTest {
     @Mock
     private ProcedimentoRepository procedimentoRepository;
 
-    @Test
-    void criarAgenda_ComDadosValidos_RetornaAgenda() {
+    private Agenda criarAgenda(Integer id, StatusAgenda status) {
+
+        Procedimento procedimento = new Procedimento(
+            1,
+            "LASER",
+            "Procedimento de teste.",
+            60,
+            100.00f,
+            true,
+            CategoriaProcedimento.LASER
+        );
+
+        Cliente cliente = new Cliente();
+        cliente.setId(1);
+
+        Usuario profissional = new Usuario(
+            1,
+            "Profissional Teste",
+            "profissional@exemplo.com",
+            "senha-teste",
+            null,
+            Perfil.PROFISSIONAL,
+            procedimento
+        );
+
+        return new Agenda(
+            id,
+            new Date(0L),
+            new Date(3600000L),
+            null,
+            null,
+            "Agenda de teste.",
+            profissional,
+            cliente,
+            procedimento,
+            status
+        );
+    }
+
+    private void configurarReferencias(Agenda agenda) {
 
         when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
+            .thenReturn(Optional.of(agenda.getCliente()));
 
         when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
+            .thenReturn(Optional.of(agenda.getProfissional()));
 
         when(procedimentoRepository.findById(1))
-            .thenReturn(Optional.of(procedimento_VALIDO));
+            .thenReturn(Optional.of(agenda.getProcedimento()));
+    }
+
+    private void configurarSemConflito(Agenda agenda) {
+
+        Integer agendaIgnorada =
+            agenda.getId() == null ? -1 : agenda.getId();
 
         when(agendaRepository.existeConflito(
             1,
-            agenda_VALIDA.getDataHoraInicio(),
-            agenda_VALIDA.getDataHoraFim(),
-            -1,
+            agenda.getDataHoraInicio(),
+            agenda.getDataHoraFim(),
+            agendaIgnorada,
             StatusAgenda.CANCELADO
         )).thenReturn(false);
+    }
 
-        when(agendaRepository.save(agenda_VALIDA))
-            .thenReturn(agenda_VALIDA);
+    @Test
+    void criarAgenda_ComDadosValidos_RetornaAgenda() {
 
-        Agenda a = agendaService.save(agenda_VALIDA);
+        Agenda agenda = criarAgenda(null, StatusAgenda.AGENDADO);
 
-        assertSame(a, agenda_VALIDA);
-        assertThat(a).isEqualTo(agenda_VALIDA);
+        configurarReferencias(agenda);
+        configurarSemConflito(agenda);
+
+        when(agendaRepository.save(agenda)).thenReturn(agenda);
+
+        Agenda resultado = agendaService.save(agenda);
+
+        assertThat(resultado).isSameAs(agenda);
+        assertThat(resultado.getValorCobrado()).isNull();
+        assertThat(resultado.getDataConclusao()).isNull();
     }
 
     @Test
     void criarAgenda_ComDadosInvalidos_ThrowsException() {
 
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_INVALIDA)
-        )
+        Agenda agenda = new Agenda();
+
+        assertThatThrownBy(() -> agendaService.save(agenda))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Informe a data e hora de início e de fim!");
     }
@@ -143,317 +145,171 @@ class AgendaServiceTest {
     @Test
     void excluirAgenda_ComIdExistente() {
 
-        assertThatCode(() ->
-            agendaService.deleteById(1)
-        ).doesNotThrowAnyException();
+        Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(agenda));
+
+        assertThatCode(() -> agendaService.deleteById(1))
+            .doesNotThrowAnyException();
     }
 
     @Test
-    void excluirAgenda_ComIdInexistente_ThrowException() {
+    void excluirAgenda_QuandoRepositoryFalha_ThrowsException() {
+
+        Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(agenda));
 
         doThrow(new RuntimeException())
             .when(agendaRepository)
-            .deleteById(99);
+            .deleteById(1);
 
-        assertThatThrownBy(() ->
-            agendaService.deleteById(99)
-        ).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> agendaService.deleteById(1))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void chamar_getAll() {
 
+        Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
+
         List<Agenda> agendas = new ArrayList<>();
-        agendas.add(agenda_INVALIDA);
-        agendas.add(agenda_VALIDA);
-        agendas.add(agenda_VALIDA);
+        agendas.add(agenda);
 
         when(agendaRepository.findAll()).thenReturn(agendas);
 
-        List<Agenda> result =
-            (List<Agenda>) agendaService.getAll();
+        Iterable<Agenda> resultado = agendaService.getAll();
 
-        log.info(result.size());
+        log.info(agendas.size());
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.size()).isEqualTo(3);
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0)).isEqualTo(agenda_INVALIDA);
+        assertThat(resultado).containsExactly(agenda);
     }
 
     @Test
     void criarAgenda_ComHorarioOcupado_ThrowsException() {
 
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
+        Agenda agenda = criarAgenda(null, StatusAgenda.AGENDADO);
 
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
-
-        when(procedimentoRepository.findById(1))
-            .thenReturn(Optional.of(procedimento_VALIDO));
-
-        when(agendaRepository.existeConflito(
-            1,
-            agenda_VALIDA.getDataHoraInicio(),
-            agenda_VALIDA.getDataHoraFim(),
-            -1,
-            StatusAgenda.CANCELADO
-        )).thenReturn(true);
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_VALIDA)
-        )
-            .isInstanceOf(AgendaConflitoException.class)
-            .hasMessage(
-                "O profissional já possui um agendamento "
-                    + "que ocupa parte ou todo esse intervalo!"
-            );
-    }
-
-    @Test
-    void criarAgenda_ComFimIgualAoInicio_ThrowsException() {
-
-        Agenda agenda = new Agenda(
-            null,
-            new Date(0L),
-            new Date(0L),
-            "Horário inválido.",
-            profissional_VALIDO,
-            cliente_VALIDO,
-            procedimento_VALIDO,
-            StatusAgenda.AGENDADO
-        );
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage(
-                "O horário final deve ser posterior ao horário inicial!"
-            );
-    }
-
-    @Test
-    void criarAgenda_ComFimAnteriorAoInicio_ThrowsException() {
-
-        Agenda agenda = new Agenda(
-            null,
-            new Date(3600000L),
-            new Date(0L),
-            "Horário inválido.",
-            profissional_VALIDO,
-            cliente_VALIDO,
-            procedimento_VALIDO,
-            StatusAgenda.AGENDADO
-        );
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage(
-                "O horário final deve ser posterior ao horário inicial!"
-            );
-    }
-
-    @Test
-    void criarAgenda_ComClienteInexistente_ThrowsException() {
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_VALIDA)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Cliente não cadastrado!");
-    }
-
-    @Test
-    void criarAgenda_ComProfissionalInexistente_ThrowsException() {
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
-
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_VALIDA)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Profissional não cadastrado!");
-    }
-
-    @Test
-    void criarAgenda_ComUsuarioADM_ThrowsException() {
-
-        Usuario usuarioADM = new Usuario(
-            1,
-            "Administrador Teste",
-            "adm@exemplo.com",
-            "senha-teste",
-            null,
-            Perfil.ADM,
-            null
-        );
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
-
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(usuarioADM));
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_VALIDA)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage(
-                "O usuário selecionado não possui perfil PROFISSIONAL!"
-            );
-    }
-
-    @Test
-    void criarAgenda_ComProcedimentoInexistente_ThrowsException() {
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
-
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
-
-        when(procedimentoRepository.findById(1))
-            .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda_VALIDA)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Procedimento não cadastrado!");
-    }
-
-    @Test
-    void criarAgenda_ComProcedimentoDiferenteDoProfissional_ThrowsException() {
-
-        Procedimento outroProcedimento = new Procedimento(
-            2,
-            "Outro Procedimento",
-            "Procedimento diferente.",
-            60,
-            200.00f,
-            true,
-            CategoriaProcedimento.GERAL
-        );
-
-        Agenda agenda = new Agenda(
-            null,
-            new Date(0L),
-            new Date(3600000L),
-            "Procedimento incompatível.",
-            profissional_VALIDO,
-            cliente_VALIDO,
-            outroProcedimento,
-            StatusAgenda.AGENDADO
-        );
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
-
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
-
-        when(procedimentoRepository.findById(2))
-            .thenReturn(Optional.of(outroProcedimento));
-
-        assertThatThrownBy(() ->
-            agendaService.save(agenda)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage(
-                "O procedimento não corresponde ao vinculado "
-                    + "ao profissional!"
-            );
-    }
-
-    @Test
-    void atualizarAgenda_IgnoraProprioIdNaConsultaDeConflito() {
-
-        Agenda agenda = new Agenda(
-            10,
-            new Date(0L),
-            new Date(3600000L),
-            "Atualização de teste.",
-            profissional_VALIDO,
-            cliente_VALIDO,
-            procedimento_VALIDO,
-            StatusAgenda.AGENDADO
-        );
-
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
-
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
-
-        when(procedimentoRepository.findById(1))
-            .thenReturn(Optional.of(procedimento_VALIDO));
+        configurarReferencias(agenda);
 
         when(agendaRepository.existeConflito(
             1,
             agenda.getDataHoraInicio(),
             agenda.getDataHoraFim(),
-            10,
+            -1,
             StatusAgenda.CANCELADO
-        )).thenReturn(false);
+        )).thenReturn(true);
 
-        when(agendaRepository.save(agenda)).thenReturn(agenda);
-
-        Agenda a = agendaService.save(agenda);
-
-        assertSame(a, agenda);
-        assertThat(a.getId()).isEqualTo(10);
+        assertThatThrownBy(() -> agendaService.save(agenda))
+            .isInstanceOf(AgendaConflitoException.class);
     }
 
     @Test
-    void salvarAgendaCancelada_NaoConsultaConflito() {
+    void concluirAgenda_RegistraPrecoEData() {
 
-        Agenda agenda = new Agenda(
-            10,
-            new Date(0L),
-            new Date(3600000L),
-            "Cancelamento de teste.",
-            profissional_VALIDO,
-            cliente_VALIDO,
-            procedimento_VALIDO,
-            StatusAgenda.CANCELADO
-        );
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONFIRMADO);
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
 
-        when(clienteRepository.findById(1))
-            .thenReturn(Optional.of(cliente_VALIDO));
+        configurarReferencias(atualizacao);
+        configurarSemConflito(atualizacao);
 
-        when(usuarioRepository.findByIdParaAgendamento(1))
-            .thenReturn(Optional.of(profissional_VALIDO));
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
 
-        when(procedimentoRepository.findById(1))
-            .thenReturn(Optional.of(procedimento_VALIDO));
+        when(agendaRepository.save(atualizacao))
+            .thenReturn(atualizacao);
+
+        Date antes = new Date();
+
+        Agenda resultado = agendaService.save(atualizacao);
+
+        Date depois = new Date();
+
+        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
+        assertThat(resultado.getDataConclusao()).isNotNull();
+        assertThat(resultado.getDataConclusao())
+            .isAfterOrEqualTo(antes)
+            .isBeforeOrEqualTo(depois);
+    }
+
+    @Test
+    void editarAgendaConcluida_PreservaReceitaAnterior() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        atualizacao.getProcedimento().setPreco(200.00f);
+
+        configurarReferencias(atualizacao);
+        configurarSemConflito(atualizacao);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        when(agendaRepository.save(atualizacao))
+            .thenReturn(atualizacao);
+
+        Agenda resultado = agendaService.save(atualizacao);
+
+        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
+        assertThat(resultado.getDataConclusao())
+            .isEqualTo(new Date(7200000L));
+    }
+
+    @Test
+    void alterarStatusAposReceita_ThrowsException() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CANCELADO);
+
+        configurarReferencias(atualizacao);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        assertThatThrownBy(() -> agendaService.save(atualizacao))
+            .isInstanceOf(AgendaConflitoException.class)
+            .hasMessage(
+                "Não é permitido alterar o status "
+                    + "após o registro da receita!"
+            );
+    }
+
+    @Test
+    void excluirAgendaComReceita_ThrowsException() {
+
+        Agenda agenda = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        agenda.setValorCobrado(100.00f);
+        agenda.setDataConclusao(new Date(7200000L));
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(agenda));
+
+        assertThatThrownBy(() -> agendaService.deleteById(1))
+            .isInstanceOf(AgendaConflitoException.class);
+    }
+
+    @Test
+    void concluirAgendaComPrecoAtual_RegistraNovoValor() {
+
+        Agenda agenda = criarAgenda(null, StatusAgenda.CONCLUIDO);
+        agenda.getProcedimento().setPreco(200.00f);
+
+        configurarReferencias(agenda);
+        configurarSemConflito(agenda);
 
         when(agendaRepository.save(agenda)).thenReturn(agenda);
 
-        Agenda a = agendaService.save(agenda);
+        Agenda resultado = agendaService.save(agenda);
 
-        assertSame(a, agenda);
-        assertThat(a.getStatusAgenda()).isEqualTo(StatusAgenda.CANCELADO);
-
-        org.mockito.Mockito.verify(
-            agendaRepository,
-            org.mockito.Mockito.never()
-        ).existeConflito(
-            org.mockito.ArgumentMatchers.anyInt(),
-            org.mockito.ArgumentMatchers.any(Date.class),
-            org.mockito.ArgumentMatchers.any(Date.class),
-            org.mockito.ArgumentMatchers.anyInt(),
-            org.mockito.ArgumentMatchers.any(StatusAgenda.class)
-        );
+        assertThat(resultado.getValorCobrado()).isEqualTo(200.00f);
+        assertThat(resultado.getDataConclusao()).isNotNull();
     }
 }

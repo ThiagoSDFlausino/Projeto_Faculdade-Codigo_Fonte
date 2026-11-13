@@ -1,10 +1,14 @@
 package faculdade.ManterAgenda.model;
 
 import java.util.Date;
+import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 public interface AgendaRepository extends CrudRepository<Agenda, Integer> {
 
@@ -24,4 +28,8 @@ public interface AgendaRepository extends CrudRepository<Agenda, Integer> {
         @Param("agendaIgnorada") Integer agendaIgnorada,
         @Param("statusCancelado") StatusAgenda statusCancelado
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Agenda a WHERE a.id = :id")
+    Optional<Agenda> findByIdParaAtualizacao(@Param("id") Integer id);
 }

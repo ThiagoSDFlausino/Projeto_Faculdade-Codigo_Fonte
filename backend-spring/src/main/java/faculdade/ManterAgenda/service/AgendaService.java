@@ -1,5 +1,6 @@
 package faculdade.ManterAgenda.service;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -127,6 +128,49 @@ public class AgendaService {
             );
         }
 
+        Agenda agendaAnterior = null;
+
+        if (agenda.getId() != null) {
+            agendaAnterior = agendaRepository
+                .findByIdParaAtualizacao(agenda.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Agenda não cadastrada!"
+                ));
+        }
+
+        boolean receitaRegistrada =
+            agendaAnterior != null
+                && agendaAnterior.getValorCobrado() != null
+                && agendaAnterior.getDataConclusao() != null;
+
+        if (receitaRegistrada) {
+
+            if (agenda.getStatusAgenda()
+                    != agendaAnterior.getStatusAgenda()) {
+
+                throw new AgendaConflitoException(
+                    "Não é permitido alterar o status "
+                        + "após o registro da receita!"
+                );
+            }
+
+            if (!Objects.equals(
+                    agendaAnterior.getProfissional().getId(),
+                    profissional.getId())
+                    || !Objects.equals(
+                        agendaAnterior.getProcedimento().getId(),
+                        procedimento.getId())
+                    || !Objects.equals(
+                        agendaAnterior.getCliente().getId(),
+                        cliente.getId())) {
+
+                throw new AgendaConflitoException(
+                    "Não é permitido trocar cliente, profissional "
+                        + "ou procedimento de uma agenda com receita!"
+                );
+            }
+        }
+
         if (agenda.getStatusAgenda() != StatusAgenda.CANCELADO) {
 
             Integer agendaIgnorada =
@@ -148,6 +192,44 @@ public class AgendaService {
             }
         }
 
+        if (receitaRegistrada) {
+
+            agenda.setValorCobrado(agendaAnterior.getValorCobrado());
+            agenda.setDataConclusao(agendaAnterior.getDataConclusao());
+
+        } else if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
+
+            // Evita inventar o histórico de agendas antigas já concluídas.
+            if (agendaAnterior != null
+                    && agendaAnterior.getStatusAgenda()
+                        == StatusAgenda.CONCLUIDO) {
+
+                throw new AgendaConflitoException(
+                    "Esta agenda já estava concluída e não possui "
+                        + "histórico financeiro completo. "
+                        + "Regularize o valor e a data de conclusão "
+                        + "antes de editá-la!"
+                );
+            }
+
+            Float preco = procedimento.getPreco();
+
+            if (preco == null || !Float.isFinite(preco) || preco < 0) {
+                throw new IllegalArgumentException(
+                    "O procedimento deve possuir um preço válido!"
+                );
+            }
+
+            agenda.setValorCobrado(preco);
+            agenda.setDataConclusao(new Date());
+
+        } else {
+
+            // Ignora qualquer valor financeiro recebido externamente.
+            agenda.setValorCobrado(null);
+            agenda.setDataConclusao(null);
+        }
+
         agenda.setCliente(cliente);
         agenda.setProfissional(profissional);
         agenda.setProcedimento(procedimento);
@@ -159,7 +241,25 @@ public class AgendaService {
         return agendaRepository.findById(id);
     }
 
+    @Transactional
     public void deleteById(Integer id) {
+
+        Agenda agenda = agendaRepository
+            .findByIdParaAtualizacao(id)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Agenda não cadastrada!"
+            ));
+
+        if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO
+                || agenda.getValorCobrado() != null
+                || agenda.getDataConclusao() != null) {
+
+            throw new AgendaConflitoException(
+                "Não é permitido excluir uma agenda "
+                    + "concluída ou com receita registrada!"
+            );
+        }
+
         agendaRepository.deleteById(id);
     }
 }

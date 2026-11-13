@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import faculdade.ManterAgenda.dto.AgendaDTO;
+import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import faculdade.ManterAgenda.model.Agenda;
 import faculdade.ManterAgenda.model.AgendaRepository;
 import faculdade.ManterAgenda.service.AgendaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 
@@ -52,7 +52,8 @@ public class AgendaController {
                 null,
                 agendaDTO.dataHoraInicio(),
                 agendaDTO.dataHoraFim(),
-                agendaDTO.valorCobrado(),
+                null,
+                null,
                 agendaDTO.observacoes(),
                 agendaDTO.profissional(),
                 agendaDTO.cliente(),
@@ -84,39 +85,43 @@ public class AgendaController {
         }
     }
 
-    @Operation( summary = "Atualizar Agenda com objeto.", description = "Retorna uma mensagem. O ID deve existir." )
+    @Operation(
+        summary = "Atualizar Agenda com objeto.",
+        description = "Retorna uma mensagem. O ID deve existir."
+    )
     @PutMapping("/Agendas/{id}")
-    public ResponseEntity<String> update( @Valid @RequestBody AgendaDTO agendaDTO, @PathVariable Integer id) {
+    public ResponseEntity<String> update(
+            @Valid @RequestBody AgendaDTO agendaDTO,
+            @PathVariable Integer id) {
 
         log.info("Atualizando agenda de ID {}.", id);
 
         try {
             Optional<Agenda> agendaData = agendaService.findById(id);
 
-            if (agendaData.isPresent()) {
-                Agenda agenda = agendaData.get();
-
-                agenda.setDataHoraInicio(agendaDTO.dataHoraInicio());
-                agenda.setDataHoraFim(agendaDTO.dataHoraFim());
-                agenda.setValorCobrado(procedimento.getPreco());
-                agenda.setObservacoes(agendaDTO.observacoes());
-                agenda.setProfissional(agendaDTO.profissional());
-                agenda.setCliente(agendaDTO.cliente());
-                agenda.setProcedimento(agendaDTO.procedimento());
-                agenda.setStatusAgenda(agendaDTO.statusAgenda());
-
-                agendaService.save(agenda);
-
-                return ResponseEntity.ok(
-                    "Agenda alterada com sucesso!"
-                );
-
-            } else {
+            if (agendaData.isEmpty()) {
                 return new ResponseEntity<>(
                     "Agenda não cadastrada!",
                     HttpStatus.NOT_FOUND
                 );
             }
+
+            Agenda agenda = new Agenda(
+                id,
+                agendaDTO.dataHoraInicio(),
+                agendaDTO.dataHoraFim(),
+                null,
+                null,
+                agendaDTO.observacoes(),
+                agendaDTO.profissional(),
+                agendaDTO.cliente(),
+                agendaDTO.procedimento(),
+                agendaDTO.statusAgenda()
+            );
+
+            agendaService.save(agenda);
+
+            return ResponseEntity.ok("Agenda alterada com sucesso!");
 
         } catch (AgendaConflitoException e) {
             return new ResponseEntity<>(
@@ -140,7 +145,10 @@ public class AgendaController {
         }
     }
 
-    @Operation( summary = "Exclui uma Agenda por ID.", description = "Retorna uma mensagem. O ID deve existir." )
+    @Operation(
+        summary = "Exclui uma Agenda por ID.",
+        description = "Agendas com receita não podem ser excluídas."
+    )
     @DeleteMapping("/Agendas/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
 
@@ -149,19 +157,28 @@ public class AgendaController {
         try {
             Optional<Agenda> agendaData = agendaService.findById(id);
 
-            if (agendaData.isPresent()) {
-                agendaService.deleteById(id);
-
-                return ResponseEntity.ok(
-                    "Agenda excluída com sucesso!"
-                );
-
-            } else {
+            if (agendaData.isEmpty()) {
                 return new ResponseEntity<>(
                     "Agenda não cadastrada!",
                     HttpStatus.NOT_FOUND
                 );
             }
+
+            agendaService.deleteById(id);
+
+            return ResponseEntity.ok("Agenda excluída com sucesso!");
+
+        } catch (AgendaConflitoException e) {
+            return new ResponseEntity<>(
+                e.getMessage(),
+                HttpStatus.CONFLICT
+            );
+
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                e.getMessage(),
+                HttpStatus.BAD_REQUEST
+            );
 
         } catch (Exception e) {
             log.error("Erro ao excluir agenda de ID {}.", id, e);
@@ -173,7 +190,10 @@ public class AgendaController {
         }
     }
 
-    @Operation( summary = "Recuperar Agendas.", description = "Retorna uma coleção de Agendas." )
+    @Operation(
+        summary = "Recuperar Agendas.",
+        description = "Retorna uma coleção de Agendas."
+    )
     @GetMapping("/Agendas")
     public @ResponseBody Iterable<Agenda> getAll() {
 
