@@ -73,13 +73,15 @@ public class UsuarioController {
 		log.info("create( " + usuarioDTO + " )");
 
 		try {
+			Procedimento procedimento = usuarioDTO.procedimento();
+
 			Usuario usuario = new Usuario(
 				usuarioDTO.nome(),
 				usuarioDTO.email(),
 				usuarioDTO.senha(),
 				usuarioDTO.funcao(),
 				usuarioDTO.perfil(),
-				usuarioDTO.procedimento()
+				procedimento
 			);
 
 			Usuario usuarioSalvo = usuarioService.save(usuario);
