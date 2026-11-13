@@ -10,10 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
 import faculdade.ManterProcedimento.model.Procedimento;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Getter
 @Setter
@@ -35,22 +36,22 @@ public class Usuario {
 	@Enumerated(EnumType.STRING)
 	private Perfil perfil;
 
-	@ManyToOne
-	private Procedimento procedimento;
+	@ManyToMany
+	private List<Procedimento> procedimentos;
 	
 	public Usuario() {}
 	
-	public Usuario(String nome, String email, String senha, String funcao, Perfil perfil, Procedimento procedimento) {
+	public Usuario(String nome, String email, String senha, String funcao, Perfil perfil, List<Procedimento> procedimentos) {
 		super();
 		this.nome = nome;
 		this.email = email;
 		this.senha = senha;
 		this.funcao = funcao;
 		this.perfil = perfil;
-		this.procedimento = procedimento;
+		this.procedimentos = procedimentos;
 	}
 
-	public Usuario(Integer id, String nome, String email, String senha, String funcao, Perfil perfil, Procedimento procedimento) {
+	public Usuario(Integer id, String nome, String email, String senha, String funcao, Perfil perfil, List<Procedimento> procedimentos) {
 		super();
 		this.id = id;
 		this.nome = nome;
@@ -58,7 +59,7 @@ public class Usuario {
 		this.senha = senha;
 		this.funcao = funcao;
 		this.perfil = perfil;
-		this.procedimento = procedimento;
+		this.procedimentos = procedimentos;
 	}
 	
 }
