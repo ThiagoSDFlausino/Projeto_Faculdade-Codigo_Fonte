@@ -2,6 +2,8 @@ package faculdade.ManterUsuario.model;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +30,7 @@ public class Usuario {
 	@NotBlank
 	private String funcao;
 	@NotBlank
+	@Enumerated(EnumType.STRING)
 	private Perfil perfil;
 	
 	public Usuario() {}

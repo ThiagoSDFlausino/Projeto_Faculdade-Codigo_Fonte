@@ -34,7 +34,7 @@ public class Cliente {
     public Cliente() {
     }
 
-    public Cliente(Integer id, String nome, String telefone, String email, Date dataNascimento, String foto, List<String> tags, String observacoes, statusCliente statusCliente) {
+    public Cliente(Integer id, String nome, String telefone, String email, Date dataNascimento, String foto, List<String> tags, String observacoes, StatusCliente statusCliente) {
         this.id = id;
         this.nome = nome;
         this.telefone = telefone;

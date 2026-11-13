@@ -45,6 +45,7 @@ public class Agenda {
         this.valorCobrado = valorCobrado;
         this.observacoes = observacoes;
         this.profissional = profissional;
+        this.cliente = cliente;
         this.procedimento = procedimento;
         this.statusAgenda = statusAgenda;
     }
