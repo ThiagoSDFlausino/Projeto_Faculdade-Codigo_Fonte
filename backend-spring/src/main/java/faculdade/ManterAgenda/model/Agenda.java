@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,8 +29,11 @@ public class Agenda {
     private Date dataHoraFim;
     private String observacoes;
 
+    @ManyToOne  
     private Usuario profissional;
+    @ManyToOne
     private Procedimento procedimento;
+    @ManyToOne
     private Cliente cliente;
 
     @Enumerated(EnumType.STRING)
