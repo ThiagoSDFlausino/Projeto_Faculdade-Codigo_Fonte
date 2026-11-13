@@ -26,7 +26,6 @@ public class Agenda {
     private @Nullable Integer id;
     private Date dataHoraInicio;
     private Date dataHoraFim;
-    private Float valorCobrado;
     private String observacoes;
 
     private Usuario profissional;
@@ -38,11 +37,10 @@ public class Agenda {
 
     public Agenda() {}
 
-    public Agenda(Integer id, Date dataHoraInicio, Date dataHoraFim, Float valorCobrado, String observacoes, Usuario profissional, Procedimento procedimento, StatusAgenda statusAgenda) {
+    public Agenda(Integer id, Date dataHoraInicio, Date dataHoraFim, String observacoes, Usuario profissional, Cliente cliente, Procedimento procedimento, StatusAgenda statusAgenda) {
         this.id = id;
         this.dataHoraInicio = dataHoraInicio;
         this.dataHoraFim = dataHoraFim;
-        this.valorCobrado = valorCobrado;
         this.observacoes = observacoes;
         this.profissional = profissional;
         this.cliente = cliente;
