@@ -56,7 +56,7 @@ public class UsuarioController {
 		log.info("createString( " + nome + ", " + email + " )");
 
 		try {
-			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil, procedimento);
+			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil, null);
 			usuarioService.save(usuario);
 			
 			return new ResponseEntity<>("Usuario criado com sucesso!", HttpStatus.CREATED);
