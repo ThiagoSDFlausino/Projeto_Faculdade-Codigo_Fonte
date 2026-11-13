@@ -51,7 +51,7 @@ public class UsuarioController {
 		@RequestParam String senha, 
 		@RequestParam String funcao, 
 		@RequestParam Perfil perfil,
-		null) {
+		) {
 
 		log.info("createString( " + nome + ", " + email + " )");
 
@@ -73,15 +73,13 @@ public class UsuarioController {
 		log.info("create( " + usuarioDTO + " )");
 
 		try {
-			Procedimento procedimento = usuarioDTO.procedimento();
-
 			Usuario usuario = new Usuario(
 				usuarioDTO.nome(),
 				usuarioDTO.email(),
 				usuarioDTO.senha(),
 				usuarioDTO.funcao(),
 				usuarioDTO.perfil(),
-				procedimento
+				null
 			);
 
 			Usuario usuarioSalvo = usuarioService.save(usuario);
