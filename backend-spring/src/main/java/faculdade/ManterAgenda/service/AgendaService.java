@@ -48,6 +48,108 @@ public class AgendaService {
             );
         }
 
+        if (agenda.getStatusAgenda() == null) {
+            throw new IllegalArgumentException(
+                "O status da agenda é obrigatório!"
+            );
+        }
+
+        Agenda agendaAnterior = null;
+
+        if (agenda.getId() != null) {
+            agendaAnterior = agendaRepository
+                .findByIdParaAtualizacao(agenda.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Agenda não cadastrada!"
+                ));
+        }
+
+        if (agendaAnterior != null
+                && agendaAnterior.getStatusAgenda()
+                    == StatusAgenda.CONCLUIDO) {
+
+            if (agenda.getStatusAgenda() != StatusAgenda.CONCLUIDO) {
+                throw new AgendaConflitoException(
+                    "Não é permitido alterar o status "
+                        + "de uma agenda já concluída!"
+                );
+            }
+
+            Float valorHistorico = agendaAnterior.getValorCobrado();
+
+            if (valorHistorico == null
+                    || !Float.isFinite(valorHistorico)
+                    || valorHistorico < 0
+                    || agendaAnterior.getDataConclusao() == null) {
+
+                throw new AgendaConflitoException(
+                    "A agenda concluída possui histórico financeiro "
+                        + "incompleto ou inválido. Regularize os dados "
+                        + "antes de editá-la!"
+                );
+            }
+
+            if (agenda.getCliente() == null
+                    || agenda.getProfissional() == null
+                    || agenda.getProcedimento() == null
+                    || agendaAnterior.getCliente() == null
+                    || agendaAnterior.getProfissional() == null
+                    || agendaAnterior.getProcedimento() == null) {
+
+                throw new AgendaConflitoException(
+                    "Não é permitido alterar os vínculos "
+                        + "de uma agenda concluída!"
+                );
+            }
+
+            boolean vinculosAlterados =
+                !Objects.equals(
+                    agendaAnterior.getCliente().getId(),
+                    agenda.getCliente().getId()
+                )
+                || !Objects.equals(
+                    agendaAnterior.getProfissional().getId(),
+                    agenda.getProfissional().getId()
+                )
+                || !Objects.equals(
+                    agendaAnterior.getProcedimento().getId(),
+                    agenda.getProcedimento().getId()
+                );
+
+            boolean horariosAlterados =
+                !Objects.equals(
+                    agendaAnterior.getDataHoraInicio(),
+                    agenda.getDataHoraInicio()
+                )
+                || !Objects.equals(
+                    agendaAnterior.getDataHoraFim(),
+                    agenda.getDataHoraFim()
+                );
+
+            if (vinculosAlterados || horariosAlterados) {
+                throw new AgendaConflitoException(
+                    "Não é permitido alterar cliente, profissional, "
+                        + "procedimento ou horários de uma agenda concluída!"
+                );
+            }
+
+            // Atualiza somente observações.
+            // Valor, data financeira e vínculos vêm do registro original.
+            agendaAnterior.setObservacoes(agenda.getObservacoes());
+
+            return agendaRepository.save(agendaAnterior);
+        }
+
+        if (agendaAnterior != null
+                && (agendaAnterior.getValorCobrado() != null
+                    || agendaAnterior.getDataConclusao() != null)) {
+
+            throw new AgendaConflitoException(
+                "A agenda possui dados financeiros, mas não está concluída. "
+                    + "Regularize o histórico antes de editá-la!"
+            );
+        }
+
         if (agenda.getDataHoraInicio() == null
                 || agenda.getDataHoraFim() == null) {
 
@@ -59,12 +161,6 @@ public class AgendaService {
         if (!agenda.getDataHoraFim().after(agenda.getDataHoraInicio())) {
             throw new IllegalArgumentException(
                 "O horário final deve ser posterior ao horário inicial!"
-            );
-        }
-
-        if (agenda.getStatusAgenda() == null) {
-            throw new IllegalArgumentException(
-                "O status da agenda é obrigatório!"
             );
         }
 
@@ -130,49 +226,6 @@ public class AgendaService {
             );
         }
 
-        Agenda agendaAnterior = null;
-
-        if (agenda.getId() != null) {
-            agendaAnterior = agendaRepository
-                .findByIdParaAtualizacao(agenda.getId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "Agenda não cadastrada!"
-                ));
-        }
-
-        boolean receitaRegistrada =
-            agendaAnterior != null
-                && agendaAnterior.getValorCobrado() != null
-                && agendaAnterior.getDataConclusao() != null;
-
-        if (receitaRegistrada) {
-
-            if (agenda.getStatusAgenda()
-                    != agendaAnterior.getStatusAgenda()) {
-
-                throw new AgendaConflitoException(
-                    "Não é permitido alterar o status "
-                        + "após o registro da receita!"
-                );
-            }
-
-            if (!Objects.equals(
-                    agendaAnterior.getProfissional().getId(),
-                    profissional.getId())
-                    || !Objects.equals(
-                        agendaAnterior.getProcedimento().getId(),
-                        procedimento.getId())
-                    || !Objects.equals(
-                        agendaAnterior.getCliente().getId(),
-                        cliente.getId())) {
-
-                throw new AgendaConflitoException(
-                    "Não é permitido trocar cliente, profissional "
-                        + "ou procedimento de uma agenda com receita!"
-                );
-            }
-        }
-
         if (agenda.getStatusAgenda() != StatusAgenda.CANCELADO) {
 
             Integer agendaIgnorada =
@@ -194,25 +247,7 @@ public class AgendaService {
             }
         }
 
-        if (receitaRegistrada) {
-
-            agenda.setValorCobrado(agendaAnterior.getValorCobrado());
-            agenda.setDataConclusao(agendaAnterior.getDataConclusao());
-
-        } else if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
-
-            // Evita inventar o histórico de agendas antigas já concluídas.
-            if (agendaAnterior != null
-                    && agendaAnterior.getStatusAgenda()
-                        == StatusAgenda.CONCLUIDO) {
-
-                throw new AgendaConflitoException(
-                    "Esta agenda já estava concluída e não possui "
-                        + "histórico financeiro completo. "
-                        + "Regularize o valor e a data de conclusão "
-                        + "antes de editá-la!"
-                );
-            }
+        if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
 
             Float preco = procedimento.getPreco();
 
@@ -226,7 +261,6 @@ public class AgendaService {
             agenda.setDataConclusao(new Date());
 
         } else {
-
             agenda.setValorCobrado(null);
             agenda.setDataConclusao(null);
         }

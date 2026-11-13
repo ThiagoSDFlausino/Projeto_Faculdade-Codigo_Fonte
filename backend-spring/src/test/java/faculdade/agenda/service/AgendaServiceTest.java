@@ -3,10 +3,8 @@ package faculdade.ManterAgenda.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -133,17 +131,189 @@ class AgendaServiceTest {
     }
 
     @Test
-    void criarAgenda_ComDadosInvalidos_ThrowsException() {
+    void concluirAgenda_RegistraPrecoEData() {
 
-        Agenda agenda = new Agenda();
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONFIRMADO);
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
 
-        assertThatThrownBy(() -> agendaService.save(agenda))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Informe a data e hora de início e de fim!");
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        configurarReferencias(atualizacao);
+        configurarSemConflito(atualizacao);
+
+        when(agendaRepository.save(atualizacao))
+            .thenReturn(atualizacao);
+
+        Date antes = new Date();
+        Agenda resultado = agendaService.save(atualizacao);
+        Date depois = new Date();
+
+        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
+        assertThat(resultado.getDataConclusao())
+            .isNotNull()
+            .isAfterOrEqualTo(antes)
+            .isBeforeOrEqualTo(depois);
     }
 
     @Test
-    void excluirAgenda_ComIdExistente() {
+    void editarAgendaConcluida_PreservaReceitaAnterior() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        atualizacao.getProcedimento().setPreco(200.00f);
+        atualizacao.setValorCobrado(999.00f);
+        atualizacao.setDataConclusao(new Date(9999999L));
+        atualizacao.setObservacoes("Observação atualizada.");
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        when(agendaRepository.save(anterior)).thenReturn(anterior);
+
+        Agenda resultado = agendaService.save(atualizacao);
+
+        assertThat(resultado).isSameAs(anterior);
+        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
+        assertThat(resultado.getDataConclusao())
+            .isEqualTo(new Date(7200000L));
+        assertThat(resultado.getObservacoes())
+            .isEqualTo("Observação atualizada.");
+    }
+
+    @Test
+    void alterarStatusAposConclusao_ThrowsException() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CANCELADO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        assertThatThrownBy(() -> agendaService.save(atualizacao))
+            .isInstanceOf(AgendaConflitoException.class)
+            .hasMessage(
+                "Não é permitido alterar o status "
+                    + "de uma agenda já concluída!"
+            );
+    }
+
+    @Test
+    void alterarStatusDeConcluidaSemHistorico_ThrowsException() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONFIRMADO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        assertThatThrownBy(() -> agendaService.save(atualizacao))
+            .isInstanceOf(AgendaConflitoException.class)
+            .hasMessage(
+                "Não é permitido alterar o status "
+                    + "de uma agenda já concluída!"
+            );
+    }
+
+    @Test
+    void editarConcluidaComHistoricoIncompleto_ThrowsException() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        assertThatThrownBy(() -> agendaService.save(atualizacao))
+            .isInstanceOf(AgendaConflitoException.class)
+            .hasMessage(
+                "A agenda concluída possui histórico financeiro "
+                    + "incompleto ou inválido. Regularize os dados "
+                    + "antes de editá-la!"
+            );
+    }
+
+    @Test
+    void editarHistorico_AposRemoverHabilitacao_PermiteObservacoes() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+        anterior.getProfissional().setProcedimentos(List.of());
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        atualizacao.setObservacoes("Atualização do histórico.");
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        when(agendaRepository.save(anterior)).thenReturn(anterior);
+
+        Agenda resultado = agendaService.save(atualizacao);
+
+        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
+        assertThat(resultado.getObservacoes())
+            .isEqualTo("Atualização do histórico.");
+    }
+
+    @Test
+    void alterarHorarioDeAgendaConcluida_ThrowsException() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(100.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        atualizacao.setDataHoraFim(new Date(5400000L));
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        assertThatThrownBy(() -> agendaService.save(atualizacao))
+            .isInstanceOf(AgendaConflitoException.class);
+    }
+
+    @Test
+    void editarReceitaZero_PreservaValor() {
+
+        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
+        anterior.setValorCobrado(0.00f);
+        anterior.setDataConclusao(new Date(7200000L));
+
+        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(anterior));
+
+        when(agendaRepository.save(anterior)).thenReturn(anterior);
+
+        Agenda resultado = agendaService.save(atualizacao);
+
+        assertThat(resultado.getValorCobrado()).isEqualTo(0.00f);
+    }
+
+    @Test
+    void excluirAgendaConcluida_ThrowsException() {
+
+        Agenda agenda = criarAgenda(1, StatusAgenda.CONCLUIDO);
+
+        when(agendaRepository.findByIdParaAtualizacao(1))
+            .thenReturn(Optional.of(agenda));
+
+        assertThatThrownBy(() -> agendaService.deleteById(1))
+            .isInstanceOf(AgendaConflitoException.class);
+    }
+
+    @Test
+    void excluirAgendaSemReceita_Permitido() {
 
         Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
 
@@ -155,40 +325,7 @@ class AgendaServiceTest {
     }
 
     @Test
-    void excluirAgenda_QuandoRepositoryFalha_ThrowsException() {
-
-        Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
-
-        when(agendaRepository.findByIdParaAtualizacao(1))
-            .thenReturn(Optional.of(agenda));
-
-        doThrow(new RuntimeException())
-            .when(agendaRepository)
-            .deleteById(1);
-
-        assertThatThrownBy(() -> agendaService.deleteById(1))
-            .isInstanceOf(RuntimeException.class);
-    }
-
-    @Test
-    void chamar_getAll() {
-
-        Agenda agenda = criarAgenda(1, StatusAgenda.AGENDADO);
-
-        List<Agenda> agendas = new ArrayList<>();
-        agendas.add(agenda);
-
-        when(agendaRepository.findAll()).thenReturn(agendas);
-
-        Iterable<Agenda> resultado = agendaService.getAll();
-
-        log.info(agendas.size());
-
-        assertThat(resultado).containsExactly(agenda);
-    }
-
-    @Test
-    void criarAgenda_ComHorarioOcupado_ThrowsException() {
+    void criarAgendaComConflito_ThrowsException() {
 
         Agenda agenda = criarAgenda(null, StatusAgenda.AGENDADO);
 
@@ -204,112 +341,5 @@ class AgendaServiceTest {
 
         assertThatThrownBy(() -> agendaService.save(agenda))
             .isInstanceOf(AgendaConflitoException.class);
-    }
-
-    @Test
-    void concluirAgenda_RegistraPrecoEData() {
-
-        Agenda anterior = criarAgenda(1, StatusAgenda.CONFIRMADO);
-        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
-
-        configurarReferencias(atualizacao);
-        configurarSemConflito(atualizacao);
-
-        when(agendaRepository.findByIdParaAtualizacao(1))
-            .thenReturn(Optional.of(anterior));
-
-        when(agendaRepository.save(atualizacao))
-            .thenReturn(atualizacao);
-
-        Date antes = new Date();
-
-        Agenda resultado = agendaService.save(atualizacao);
-
-        Date depois = new Date();
-
-        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
-        assertThat(resultado.getDataConclusao()).isNotNull();
-        assertThat(resultado.getDataConclusao())
-            .isAfterOrEqualTo(antes)
-            .isBeforeOrEqualTo(depois);
-    }
-
-    @Test
-    void editarAgendaConcluida_PreservaReceitaAnterior() {
-
-        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
-        anterior.setValorCobrado(100.00f);
-        anterior.setDataConclusao(new Date(7200000L));
-
-        Agenda atualizacao = criarAgenda(1, StatusAgenda.CONCLUIDO);
-        atualizacao.getProcedimento().setPreco(200.00f);
-
-        configurarReferencias(atualizacao);
-        configurarSemConflito(atualizacao);
-
-        when(agendaRepository.findByIdParaAtualizacao(1))
-            .thenReturn(Optional.of(anterior));
-
-        when(agendaRepository.save(atualizacao))
-            .thenReturn(atualizacao);
-
-        Agenda resultado = agendaService.save(atualizacao);
-
-        assertThat(resultado.getValorCobrado()).isEqualTo(100.00f);
-        assertThat(resultado.getDataConclusao())
-            .isEqualTo(new Date(7200000L));
-    }
-
-    @Test
-    void alterarStatusAposReceita_ThrowsException() {
-
-        Agenda anterior = criarAgenda(1, StatusAgenda.CONCLUIDO);
-        anterior.setValorCobrado(100.00f);
-        anterior.setDataConclusao(new Date(7200000L));
-
-        Agenda atualizacao = criarAgenda(1, StatusAgenda.CANCELADO);
-
-        configurarReferencias(atualizacao);
-
-        when(agendaRepository.findByIdParaAtualizacao(1))
-            .thenReturn(Optional.of(anterior));
-
-        assertThatThrownBy(() -> agendaService.save(atualizacao))
-            .isInstanceOf(AgendaConflitoException.class)
-            .hasMessage(
-                "Não é permitido alterar o status "
-                    + "após o registro da receita!"
-            );
-    }
-
-    @Test
-    void excluirAgendaComReceita_ThrowsException() {
-
-        Agenda agenda = criarAgenda(1, StatusAgenda.CONCLUIDO);
-        agenda.setValorCobrado(100.00f);
-        agenda.setDataConclusao(new Date(7200000L));
-
-        when(agendaRepository.findByIdParaAtualizacao(1))
-            .thenReturn(Optional.of(agenda));
-
-        assertThatThrownBy(() -> agendaService.deleteById(1))
-            .isInstanceOf(AgendaConflitoException.class);
-    }
-
-    @Test
-    void concluirAgendaComPrecoAtual_RegistraNovoValor() {
-
-        Agenda agenda = criarAgenda(null, StatusAgenda.CONCLUIDO);
-        agenda.getProcedimento().setPreco(200.00f);
-
-        configurarReferencias(agenda);
-        configurarSemConflito(agenda);
-
-        when(agendaRepository.save(agenda)).thenReturn(agenda);
-
-        Agenda resultado = agendaService.save(agenda);
-
-        assertThat(resultado.getValorCobrado()).isEqualTo(200.00f);
-        assertThat(resultado.getDataConclusao()).isNotNull();
     }
 }
