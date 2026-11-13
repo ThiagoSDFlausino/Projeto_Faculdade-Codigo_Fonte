@@ -22,6 +22,7 @@ public class Procedimento {
     private String nome;
     private String descricao;
     private Integer duracao;
+    private Float preco;
     private Boolean ativo;
 
     @Enumerated(EnumType.STRING)
@@ -29,11 +30,12 @@ public class Procedimento {
 
     public Procedimento() {}
 
-    public Procedimento(Integer id, String nome, String descricao, Integer duracao, Boolean ativo, CategoriaProcedimento categoriaProcedimento) {
+    public Procedimento(Integer id, String nome, String descricao, Integer duracao, Float preco, Boolean ativo, CategoriaProcedimento categoriaProcedimento) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
         this.duracao = duracao;
+        this.preco = preco;
         this.ativo = ativo;
         this.categoriaProcedimento = categoriaProcedimento;
     }
