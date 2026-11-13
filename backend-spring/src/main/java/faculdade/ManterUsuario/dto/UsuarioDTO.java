@@ -9,6 +9,8 @@ public record UsuarioDTO(
     Integer id,
     @NotBlank(message = "O nome é obrigatório!") String nome,
     @Email(message = "Email inválido!") @NotBlank(message = "O email é obrigatório!") String email,
+    @NotBlank(message = "A senha é obrigatória!")
+    String senha,
     String funcao,
     Perfil perfil
 ) {
@@ -17,6 +19,7 @@ public record UsuarioDTO(
             u.getId(),
             u.getNome(),
             u.getEmail(),
+            u.getSenha(),
             u.getFuncao(),
             u.getPerfil());
     }
