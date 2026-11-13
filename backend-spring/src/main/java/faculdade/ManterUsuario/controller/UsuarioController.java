@@ -56,7 +56,7 @@ public class UsuarioController {
 		log.info("createString( " + nome + ", " + email + " )");
 
 		try {
-			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil);
+			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil, procedimento);
 			usuarioService.save(usuario);
 			
 			return new ResponseEntity<>("Usuario criado com sucesso!", HttpStatus.CREATED);
@@ -78,7 +78,8 @@ public class UsuarioController {
 				usuarioDTO.email(),
 				usuarioDTO.senha(),
 				usuarioDTO.funcao(),
-				usuarioDTO.perfil()
+				usuarioDTO.perfil(),
+				usuarioDTO.procedimento()
 			);
 
 			Usuario usuarioSalvo = usuarioService.save(usuario);
@@ -109,6 +110,7 @@ public class UsuarioController {
 				usuario.setSenha(usuarioDTO.senha());
 				usuario.setFuncao(usuarioDTO.funcao());
 				usuario.setPerfil(usuarioDTO.perfil());
+				usuario.setProcedimento(usuarioDTO.procedimento());
 
 				usuarioService.save(usuario);
 				

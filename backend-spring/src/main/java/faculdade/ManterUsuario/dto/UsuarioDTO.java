@@ -18,7 +18,7 @@ public record UsuarioDTO(
     String senha,
     String funcao,
     @NotNull(message = "O perfil é obrigatório!")
-    Perfil perfil
+    Perfil perfil,
     @NotNull(message = "O procedimento é obrigatório!")
     Procedimento procedimento
 ) {
