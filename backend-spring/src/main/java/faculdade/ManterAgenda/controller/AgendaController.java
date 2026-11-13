@@ -52,6 +52,7 @@ public class AgendaController {
                 null,
                 agendaDTO.dataHoraInicio(),
                 agendaDTO.dataHoraFim(),
+                agendaDTO.valorCobrado(),
                 agendaDTO.observacoes(),
                 agendaDTO.profissional(),
                 agendaDTO.cliente(),
@@ -97,6 +98,7 @@ public class AgendaController {
 
                 agenda.setDataHoraInicio(agendaDTO.dataHoraInicio());
                 agenda.setDataHoraFim(agendaDTO.dataHoraFim());
+                agenda.setValorCobrado(agendaDTO.valorCobrado());
                 agenda.setObservacoes(agendaDTO.observacoes());
                 agenda.setProfissional(agendaDTO.profissional());
                 agenda.setCliente(agendaDTO.cliente());
