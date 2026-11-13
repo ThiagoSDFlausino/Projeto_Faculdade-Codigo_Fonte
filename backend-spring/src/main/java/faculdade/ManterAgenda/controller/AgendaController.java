@@ -98,7 +98,7 @@ public class AgendaController {
 
                 agenda.setDataHoraInicio(agendaDTO.dataHoraInicio());
                 agenda.setDataHoraFim(agendaDTO.dataHoraFim());
-                agenda.setValorCobrado(agendaDTO.valorCobrado());
+                agenda.setValorCobrado(procedimento.getPreco());
                 agenda.setObservacoes(agendaDTO.observacoes());
                 agenda.setProfissional(agendaDTO.profissional());
                 agenda.setCliente(agendaDTO.cliente());
