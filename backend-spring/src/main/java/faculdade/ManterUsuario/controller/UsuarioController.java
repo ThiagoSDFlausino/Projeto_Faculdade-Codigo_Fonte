@@ -73,7 +73,7 @@ public class UsuarioController {
 	@PostMapping(path = "/Usuarios")
 	public ResponseEntity<UsuarioDTO> create(@Valid @RequestBody UsuarioDTO usuarioDTO) {
 
-		log.info("create( " + usuarioDTO + " )");
+		log.info("create( " + usuarioDTO.perfil() + " )");
 
 		try {
 			Procedimento procedimento = null;
@@ -121,7 +121,7 @@ public class UsuarioController {
 	@PutMapping("/Usuarios/{id}")
 	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO usuarioDTO, @PathVariable Integer id) {
 
-		log.info("update( " + usuarioDTO + ", Id " + id + " )");
+		log.info("update( " + usuarioDTO.perfil() + ", Id " + id + " )");
 
 		try {
 			Optional<Usuario> usuarioData = usuarioService.findById(id);
