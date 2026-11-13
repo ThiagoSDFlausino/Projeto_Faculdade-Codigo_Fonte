@@ -1,0 +1,159 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Usuarios
+meta:
+  id: wrk_37fe31ed45a947eba39662af9247dcef
+  created: 1787143568942
+  modified: 1787143568942
+  description: ""
+collection:
+  - url: localhost:8080/demo-api/Usuarios
+    name: /demo-api/Usuarios
+    meta:
+      id: req_b04b7f107e0d475e9fab62f26d37b167
+      created: 1787143582087
+      modified: 1787152435969
+      isPrivate: false
+      description: ""
+      sortKey: -1787143582087
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:8080/demo-api/Usuarios/param
+    name: /demo-api/Usuarios/param
+    meta:
+      id: req_c2f84dad2c9b42bbaee375401d600d9a
+      created: 1787149360966
+      modified: 1787168153629
+      isPrivate: false
+      description: ""
+      sortKey: -1787149360966
+    method: POST
+    parameters:
+      - name: nome
+        value: Murakami
+        description: ""
+        disabled: false
+      - name: email
+        value: teste@teste
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:8080/demo-api/Usuarios
+    name: /demo-api/Usuarios
+    meta:
+      id: req_6a740958e816496abc4412742b607e6c
+      created: 1787149520500
+      modified: 1787168235332
+      isPrivate: false
+      description: ""
+      sortKey: -1787149520500
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"nome":"Murakami5555",
+        	"email":"murakami55555@teste.com"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:8080/demo-api/Usuarios/2
+    name: /demo-api/Usuarios/{id}
+    meta:
+      id: req_0fe8dd59bc9c4a9b8d67933393e465c3
+      created: 1787149990955
+      modified: 1787152002185
+      isPrivate: false
+      description: ""
+      sortKey: -1787149990955
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:8080/demo-api/Usuarios/53
+    name: demo-api/Usuarios/{id}
+    meta:
+      id: req_d30dd99ded7342d28448d8fe03c4b4ef
+      created: 1787152329135
+      modified: 1787152329135
+      isPrivate: false
+      description: ""
+      sortKey: -1787150997100.5
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"nome":"Murakami3333",
+        	"email":"murakami3333@gggg.com"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8080/swagger-ui/index.html
+    name: swagger-ui/index.html
+    meta:
+      id: req_8cf03f8f57dd4e11b7b1a31057ec9708
+      created: 1787167039894
+      modified: 1787167062333
+      isPrivate: false
+      description: ""
+      sortKey: -1787167039894
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_a8dc51fff28bbbcb2bf87138929a8f4873c6263d
+    created: 1787143568946
+    modified: 1787143568946
+environments:
+  name: Base Environment
+  meta:
+    id: env_a8dc51fff28bbbcb2bf87138929a8f4873c6263d
+    created: 1787143568944
+    modified: 1787143568944
+    isPrivate: false
