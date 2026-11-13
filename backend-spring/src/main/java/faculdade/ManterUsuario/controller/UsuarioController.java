@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import faculdade.ManterUsuario.dto.UsuarioDTO;
+import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import faculdade.ManterUsuario.model.UsuarioRepository;
 import faculdade.ManterUsuario.service.UsuarioService;
@@ -41,13 +42,18 @@ public class UsuarioController {
 
 	@Operation(summary = "Criar Usuario com parametros.", description = "Retorna uma mensagem.")
 	@PostMapping(path = "/Usuarios/param")
-	public ResponseEntity<String> createString(@RequestParam String nome, @RequestParam String email) {
+	public ResponseEntity<String> createString(
+		@RequestParam String nome, 
+		@RequestParam String email, 
+		@RequestParam String senha, 
+		@RequestParam String funcao, 
+		@RequestParam Perfil perfil) {
 
 		log.info("createString( " + nome + ", " + email + " )");
 
 		try {
-			Usuario a = new Usuario(nome, email);
-			usuarioService.save(a);
+			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil);
+			usuarioService.save(usuario);
 			
 			return new ResponseEntity<>("Usuario criado com sucesso!", HttpStatus.CREATED);
 		} catch (Exception e) {

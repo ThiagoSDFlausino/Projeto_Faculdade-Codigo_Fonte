@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import faculdade.ManterUsuario.model.UsuarioRepository;
 import lombok.extern.log4j.Log4j2;
