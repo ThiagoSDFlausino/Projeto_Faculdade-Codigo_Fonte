@@ -62,30 +62,45 @@ public class UsuarioController {
 
 		log.info("create( " + usuarioDTO + " )");
 
-		Usuario usuario = new Usuario(
-			usuarioDTO.getNome(),
-			usuarioDTO.getEmail(),
-			usuarioDTO.getSenha(),
-			usuarioDTO.getFuncao(),
-			usuarioDTO.getPerfil()
-		);
-		Usuario usuarioSalvo = usuarioService.save(usuario);
+		try {
+			Usuario usuario = new Usuario(
+				usuarioDTO.nome(),
+				usuarioDTO.email(),
+				usuarioDTO.senha(),
+				usuarioDTO.funcao(),
+				usuarioDTO.perfil()
+			);
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioDTO.from(usuarioSalvo));
+			Usuario usuarioSalvo = usuarioService.save(usuario);
+
+			return new ResponseEntity<>(UsuarioDTO.from(usuarioSalvo),HttpStatus.CREATED);
+
+		} catch (Exception e) {
+			log.error("Erro ao criar usuário.", e);
+
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@Operation(summary = "Atualizar Usuario com objeto.", description = "Retorna uma mensagem. O Id deve existir.")
 	@PutMapping("/Usuarios/{id}")
-	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO UsuarioDTO, @PathVariable Integer id) {
+	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO usuarioDTO, @PathVariable Integer id) {
 
-		log.info("update( " + UsuarioDTO + ", Id " + id + " )");
-
-		Optional<Usuario> UsuarioData = usuarioService.findById(id);
+		log.info("update( " + usuarioDTO + ", Id " + id + " )");
 
 		try {
-			if (UsuarioData.isPresent()) {
-				Usuario a = new Usuario(UsuarioDTO.getNome(), UsuarioDTO.getEmail());
-				usuarioService.save(a);
+			Optional<Usuario> usuarioData = usuarioService.findById(id);
+
+			if (usuarioData.isPresent()) {
+				Usuario usuario = usuarioData.get();
+
+				usuario.setNome(usuarioDTO.nome());
+				usuario.setEmail(usuarioDTO.email());
+				usuario.setSenha(usuarioDTO.senha());
+				usuario.setFuncao(usuarioDTO.funcao());
+				usuario.setPerfil(usuarioDTO.perfil());
+
+				usuarioService.save(usuario);
 				
 				return ResponseEntity.ok("Usuario alterado com sucesso!"); 
 			} else {
