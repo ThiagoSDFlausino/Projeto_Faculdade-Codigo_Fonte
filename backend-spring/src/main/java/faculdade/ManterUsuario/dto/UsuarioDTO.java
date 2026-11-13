@@ -4,6 +4,7 @@ import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record UsuarioDTO(
     Integer id,
@@ -15,7 +16,7 @@ public record UsuarioDTO(
     @NotBlank(message = "A senha é obrigatória!")
     String senha,
     String funcao,
-    @NotBlank(message = "O perfil é obrigatório!")
+    @NotNull(message = "O perfil é obrigatório!")
     Perfil perfil
 ) {
     public static UsuarioDTO from(Usuario u) {

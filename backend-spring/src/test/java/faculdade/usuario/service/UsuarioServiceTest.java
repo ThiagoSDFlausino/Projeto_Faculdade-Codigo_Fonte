@@ -24,8 +24,21 @@ import lombok.extern.log4j.Log4j2;
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
-	public static final Usuario usuario_VALIDO = new Usuario("Murakami", "murakami@ifsp.edu.br");
-	public static final Usuario usuario_INVALIDO = new Usuario("", "murakami.ifsp.edu.br");
+	public static final Usuario usuario_VALIDO = new Usuario(
+    "Usuário Teste",
+    "usuario@exemplo.com",
+    "senha-teste",
+    "Atendimento",
+    Perfil.SECRETARIA
+	);
+
+	public static final Usuario usuario_INVALIDO = new Usuario(
+		"",
+		"email-invalido",
+		"senha-teste",
+		"Atendimento",
+		Perfil.SECRETARIA
+	);
 
 	@InjectMocks
 	private UsuarioService usuarioService;
