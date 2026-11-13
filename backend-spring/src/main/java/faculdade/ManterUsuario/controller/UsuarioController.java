@@ -26,8 +26,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 
-import faculdade.ManterUsuario.dto.UsuarioDTO;
-
 @Tag(name = "usuarios-api", description = "API para manter Usuarios.")
 @Log4j2
 @RequestMapping(path = "/usuarios-api")
