@@ -1,4 +1,4 @@
-package demo.ManterClientes.model;
+package faculdade.ManterClientes.model;
 
 import org.springframework.data.repository.CrudRepository;
 

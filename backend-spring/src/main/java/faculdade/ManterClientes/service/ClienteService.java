@@ -1,12 +1,12 @@
-package demo.ManterClientes.service;
+package faculdade.ManterClientes.service;
 
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import demo.ManterClientes.model.Cliente;
-import demo.ManterClientes.model.ClienteRepository;
+import faculdade.ManterClientes.model.Cliente;
+import faculdade.ManterClientes.model.ClienteRepository;
 
 @Service
 public class ClienteService {

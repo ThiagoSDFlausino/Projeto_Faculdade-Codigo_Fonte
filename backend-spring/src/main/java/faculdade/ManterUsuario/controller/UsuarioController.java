@@ -32,10 +32,10 @@ import lombok.extern.log4j.Log4j2;
 public class UsuarioController {
 
 	@Autowired
-	private UsuarioService UsuarioService;
+	private UsuarioService usuarioService;
 
 	@Autowired
-	private UsuarioRepository UsuarioRepository;
+	private UsuarioRepository usuarioRepository;
 
 	@Operation(summary = "Criar Usuario com parametros.", description = "Retorna uma mensagem.")
 	@PostMapping(path = "/Usuarios/param")
@@ -45,7 +45,7 @@ public class UsuarioController {
 
 		try {
 			Usuario a = new Usuario(nome, email);
-			UsuarioService.save(a);
+			usuarioService.save(a);
 			
 			return new ResponseEntity<>("Usuario criado com sucesso!", HttpStatus.CREATED);
 		} catch (Exception e) {
@@ -56,13 +56,13 @@ public class UsuarioController {
 
 	@Operation(summary = "Criar Usuario com objeto.", description = "Retorna o objeto criado.")
 	@PostMapping(path = "/Usuarios")
-	public ResponseEntity<UsuarioDTO> create(@Valid @RequestBody UsuarioDTO UsuarioDTO) {
+	public ResponseEntity<UsuarioDTO> create(@Valid @RequestBody UsuarioDTO usuarioDTO) {
 
-		log.info("create( " + UsuarioDTO + " )");
+		log.info("create( " + usuarioDTO + " )");
 		try {
-			Usuario a = UsuarioService.save(new Usuario(UsuarioDTO.getNome(), UsuarioDTO.getEmail()));
+			Usuario a = usuarioService.save(new Usuario(usuarioDTO.getNome(), usuarioDTO.getEmail()));
 			
-			return new ResponseEntity<>(UsuarioDTO.from(a), HttpStatus.CREATED);
+			return new ResponseEntity<>(usuarioDTO.from(a), HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -70,16 +70,16 @@ public class UsuarioController {
 
 	@Operation(summary = "Atualizar Usuario com objeto.", description = "Retorna uma mensagem. O Id deve existir.")
 	@PutMapping("/Usuarios/{id}")
-	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO UsuarioDTO, @PathVariable Integer id) {
+	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO usuarioDTO, @PathVariable Integer id) {
 
-		log.info("update( " + UsuarioDTO + ", Id " + id + " )");
+		log.info("update( " + usuarioDTO + ", Id " + id + " )");
 
-		Optional<Usuario> UsuarioData = UsuarioService.findById(id);
+		Optional<Usuario> UsuarioData = usuarioService.findById(id);
 
 		try {
 			if (UsuarioData.isPresent()) {
-				Usuario a = new Usuario(UsuarioDTO.getNome(), UsuarioDTO.getEmail());
-				UsuarioService.save(a);
+				Usuario a = new Usuario(usuarioDTO.getNome(), usuarioDTO.getEmail());
+				usuarioService.save(a);
 				
 				return ResponseEntity.ok("Usuario alterado com sucesso!"); 
 			} else {
@@ -98,10 +98,10 @@ public class UsuarioController {
 
 		try {
 
-			Optional<Usuario> UsuarioData = UsuarioService.findById(id);
+			Optional<Usuario> usuarioData = usuarioService.findById(id);
 
-			if (UsuarioData.isPresent()) {
-				UsuarioService.deleteById(id);
+			if (usuarioData.isPresent()) {
+				usuarioService.deleteById(id);
 			} else {
 				return new ResponseEntity<>("Usuario não cadastrado!", HttpStatus.NOT_FOUND);
 			}
@@ -118,7 +118,7 @@ public class UsuarioController {
 
 		log.info("getAll()");
 
-		return UsuarioRepository.findAll();
+		return usuarioRepository.findAll();
 	}
 
 }

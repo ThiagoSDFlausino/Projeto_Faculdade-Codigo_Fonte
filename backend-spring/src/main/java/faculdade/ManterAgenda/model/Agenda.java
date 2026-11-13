@@ -1,4 +1,4 @@
-package demo.ManterAgenda.model;
+package faculdade.ManterAgenda.model;
 
 import java.util.Date;
 import jakarta.annotation.Nullable;
@@ -6,20 +6,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.Getter;
 import lombok.Setter;
 
-import demo.ManterUsuario.model.Usuario;
-import demo.ManterProcedimento.model.Procedimento;
+import faculdade.ManterUsuario.model.Usuario;
+import faculdade.ManterProcedimento.model.Procedimento;
+import faculdade.ManterClientes.model.Cliente;
+import faculdade.ManterAgenda.model.StatusAgenda;
 
 @Getter
 @Setter
 @Entity
 
 public class Agenda {
-    private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private @Nullable Integer id;
     private Date dataHoraInicio;
     private Date dataHoraFim;
     private Float valorCobrado;
@@ -28,6 +32,8 @@ public class Agenda {
     private Usuario profissional;
     private Procedimento procedimento;
     private Cliente cliente;
+
+    @Enumerated(EnumType.STRING)
     private StatusAgenda statusAgenda;
 
     public Agenda() {}

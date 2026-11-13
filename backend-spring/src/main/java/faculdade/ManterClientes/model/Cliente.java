@@ -1,4 +1,4 @@
-package demo.ManterClientes.model;
+package faculdade.ManterClientes.model;
 
 import java.util.Date;
 import java.util.List;
@@ -9,6 +9,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,6 +28,7 @@ public class Cliente {
     private List<String> tags;
     private String observacoes;
     
+    @Enumerated(EnumType.STRING)
     private StatusCliente statusCliente;
 
     public Cliente() {
@@ -34,7 +37,7 @@ public class Cliente {
     public Cliente(Integer id, String nome, String telefone, String email, Date dataNascimento, String foto, List<String> tags, String observacoes, statusCliente statusCliente) {
         this.id = id;
         this.nome = nome;
-        this.telefone = telephone;
+        this.telefone = telefone;
         this.email = email;
         this.dataNascimento = dataNascimento;
         this.foto = foto;

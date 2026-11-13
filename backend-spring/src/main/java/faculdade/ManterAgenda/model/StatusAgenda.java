@@ -1,4 +1,4 @@
-package demo.ManterAgenda.model;
+package faculdade.ManterAgenda.model;
 
 public enum StatusAgenda {
     AGENDADO(1),

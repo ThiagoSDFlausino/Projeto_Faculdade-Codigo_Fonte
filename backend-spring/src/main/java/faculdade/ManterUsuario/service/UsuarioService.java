@@ -12,22 +12,22 @@ import faculdade.ManterUsuario.model.UsuarioRepository;
 public class UsuarioService {
 
 	@Autowired
-	private UsuarioRepository UsuarioRepository;
+	private UsuarioRepository usuarioRepository;
 
 	public Iterable<Usuario> getAll() {
-		return UsuarioRepository.findAll();
+		return usuarioRepository.findAll();
 	}
 
 	public Usuario save(Usuario a) {
-		return UsuarioRepository.save(a);
+		return usuarioRepository.save(a);
 	}
 
 	public Optional<Usuario> findById(Integer id) {
-		return UsuarioRepository.findById(id);
+		return usuarioRepository.findById(id);
 	}
 
 	public void deleteById(Integer id) {
-		UsuarioRepository.deleteById(id);
+		usuarioRepository.deleteById(id);
 	}
 
 }
