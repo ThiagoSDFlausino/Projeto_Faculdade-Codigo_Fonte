@@ -56,6 +56,9 @@ public class UsuarioController {
 		log.info("createString( " + nome + ", " + email + " )");
 
 		try {
+			if (perfil == Perfil.PROFISSIONAL) {
+				return new ResponseEntity<>("Para cadastrar um profissional, utilize o cadastro por JSON " + "e informe o procedimento!",HttpStatus.BAD_REQUEST);
+			}
 			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil, null);
 			usuarioService.save(usuario);
 			
@@ -73,13 +76,34 @@ public class UsuarioController {
 		log.info("create( " + usuarioDTO + " )");
 
 		try {
+			Procedimento procedimento = null;
+
+			if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
+
+				if (usuarioDTO.procedimento() == null || usuarioDTO.procedimento().getId() == null) {
+					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+				}
+
+				Optional<Procedimento> procedimentoData = procedimentoRepository.findById( usuarioDTO.procedimento().getId() );
+
+				if (procedimentoData.isEmpty()) {
+					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+				}
+
+				procedimento = procedimentoData.get();
+
+			} else if (usuarioDTO.procedimento() != null) {
+
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+
 			Usuario usuario = new Usuario(
 				usuarioDTO.nome(),
 				usuarioDTO.email(),
 				usuarioDTO.senha(),
 				usuarioDTO.funcao(),
 				usuarioDTO.perfil(),
-				usuarioDTO.procedimento()
+				procedimento
 			);
 
 			Usuario usuarioSalvo = usuarioService.save(usuario);
@@ -102,6 +126,27 @@ public class UsuarioController {
 		try {
 			Optional<Usuario> usuarioData = usuarioService.findById(id);
 
+			Procedimento procedimento = null;
+
+			if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
+
+				if (usuarioDTO.procedimento() == null || usuarioDTO.procedimento().getId() == null) {
+
+					return new ResponseEntity<>("O profissional deve ter um procedimento vinculado!",HttpStatus.BAD_REQUEST);
+				}
+
+				Optional<Procedimento> procedimentoData = procedimentoRepository.findById(usuarioDTO.procedimento().getId());
+
+				if (procedimentoData.isEmpty()) {
+					return new ResponseEntity<>("Procedimento não cadastrado!",HttpStatus.BAD_REQUEST);
+				}
+
+				procedimento = procedimentoData.get();
+
+			} else if (usuarioDTO.procedimento() != null) {
+				return new ResponseEntity<>("ADM e SECRETARIA não devem ter procedimento vinculado!",HttpStatus.BAD_REQUEST);
+			}
+
 			if (usuarioData.isPresent()) {
 				Usuario usuario = usuarioData.get();
 
@@ -110,7 +155,7 @@ public class UsuarioController {
 				usuario.setSenha(usuarioDTO.senha());
 				usuario.setFuncao(usuarioDTO.funcao());
 				usuario.setPerfil(usuarioDTO.perfil());
-				usuario.setProcedimento(usuarioDTO.procedimento());
+				usuario.setProcedimento(procedimento);
 
 				usuarioService.save(usuario);
 				
