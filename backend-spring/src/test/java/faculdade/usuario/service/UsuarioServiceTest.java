@@ -30,7 +30,8 @@ class UsuarioServiceTest {
     "usuario@exemplo.com",
     "senha-teste",
     "Atendimento",
-    Perfil.SECRETARIA
+    Perfil.SECRETARIA,
+	null
 	);
 
 	public static final Usuario usuario_INVALIDO = new Usuario(
@@ -38,7 +39,8 @@ class UsuarioServiceTest {
 		"email-invalido",
 		"senha-teste",
 		"Atendimento",
-		Perfil.SECRETARIA
+		Perfil.SECRETARIA,
+		null
 	);
 
 	@InjectMocks

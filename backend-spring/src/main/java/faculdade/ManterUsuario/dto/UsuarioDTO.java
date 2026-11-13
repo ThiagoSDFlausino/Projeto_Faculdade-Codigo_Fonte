@@ -19,7 +19,6 @@ public record UsuarioDTO(
     String funcao,
     @NotNull(message = "O perfil é obrigatório!")
     Perfil perfil,
-    @NotNull(message = "O procedimento é obrigatório!")
     Procedimento procedimento
 ) {
     public static UsuarioDTO from(Usuario u) {

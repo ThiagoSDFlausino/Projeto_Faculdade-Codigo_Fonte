@@ -51,7 +51,7 @@ public class UsuarioController {
 		@RequestParam String senha, 
 		@RequestParam String funcao, 
 		@RequestParam Perfil perfil,
-		@RequestParam Procedimento procedimento) {
+		null) {
 
 		log.info("createString( " + nome + ", " + email + " )");
 
