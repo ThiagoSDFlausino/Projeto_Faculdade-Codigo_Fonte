@@ -69,9 +69,9 @@ public class ClienteController {
 
         log.info("update( " + clienteDTO + ", Id " + id + " )");
 
-        Optional<Cliente> clienteData = clienteService.findById(id);
-
         try {
+        Optional<Cliente> clienteData = clienteService.findById(id);
+        
             if (clienteData.isPresent()) {
                 Cliente c = new Cliente(
                     id,

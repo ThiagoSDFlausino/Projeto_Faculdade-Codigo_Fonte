@@ -19,6 +19,7 @@ public record ProcedimentoDTO(
     Integer duracao,
 
     @NotNull(message = "O preço é obrigatório!")
+    @PositiveOrZero(message = "O preço não pode ser negativo!")
     Float preco,
 
     @NotNull(message = "Informe se o procedimento está ativo!")
