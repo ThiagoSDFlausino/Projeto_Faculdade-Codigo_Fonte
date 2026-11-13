@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 
+import faculdade.ManterUsuario.dto.UsuarioDTO;
+
 @Tag(name = "usuarios-api", description = "API para manter Usuarios.")
 @Log4j2
 @RequestMapping(path = "/usuarios-api")
@@ -59,26 +61,30 @@ public class UsuarioController {
 	public ResponseEntity<UsuarioDTO> create(@Valid @RequestBody UsuarioDTO usuarioDTO) {
 
 		log.info("create( " + usuarioDTO + " )");
-		try {
-			Usuario a = usuarioService.save(new Usuario(usuarioDTO.getNome(), usuarioDTO.getEmail()));
-			
-			return new ResponseEntity<>(usuarioDTO.from(a), HttpStatus.CREATED);
-		} catch (Exception e) {
-			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+
+		Usuario usuario = new Usuario(
+			usuarioDTO.getNome(),
+			usuarioDTO.getEmail(),
+			usuarioDTO.getSenha(),
+			usuarioDTO.getFuncao(),
+			usuarioDTO.getPerfil()
+		);
+		Usuario usuarioSalvo = usuarioService.save(usuario);
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioDTO.from(usuarioSalvo));
 	}
 
 	@Operation(summary = "Atualizar Usuario com objeto.", description = "Retorna uma mensagem. O Id deve existir.")
 	@PutMapping("/Usuarios/{id}")
-	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO usuarioDTO, @PathVariable Integer id) {
+	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO UsuarioDTO, @PathVariable Integer id) {
 
-		log.info("update( " + usuarioDTO + ", Id " + id + " )");
+		log.info("update( " + UsuarioDTO + ", Id " + id + " )");
 
 		Optional<Usuario> UsuarioData = usuarioService.findById(id);
 
 		try {
 			if (UsuarioData.isPresent()) {
-				Usuario a = new Usuario(usuarioDTO.getNome(), usuarioDTO.getEmail());
+				Usuario a = new Usuario(UsuarioDTO.getNome(), UsuarioDTO.getEmail());
 				usuarioService.save(a);
 				
 				return ResponseEntity.ok("Usuario alterado com sucesso!"); 
@@ -98,9 +104,9 @@ public class UsuarioController {
 
 		try {
 
-			Optional<Usuario> usuarioData = usuarioService.findById(id);
+			Optional<Usuario> UsuarioData = usuarioService.findById(id);
 
-			if (usuarioData.isPresent()) {
+			if (UsuarioData.isPresent()) {
 				usuarioService.deleteById(id);
 			} else {
 				return new ResponseEntity<>("Usuario não cadastrado!", HttpStatus.NOT_FOUND);
