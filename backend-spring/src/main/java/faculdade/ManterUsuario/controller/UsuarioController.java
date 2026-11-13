@@ -21,6 +21,8 @@ import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import faculdade.ManterUsuario.model.UsuarioRepository;
 import faculdade.ManterUsuario.service.UsuarioService;
+import faculdade.ManterProcedimento.model.ProcedimentoRepository;
+import faculdade.ManterProcedimento.model.Procedimento;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,6 +40,9 @@ public class UsuarioController {
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
+	@Autowired
+	private ProcedimentoRepository procedimentoRepository;
+
 	@Operation(summary = "Criar Usuario com parametros.", description = "Retorna uma mensagem.")
 	@PostMapping(path = "/Usuarios/param")
 	public ResponseEntity<String> createString(
@@ -45,7 +50,8 @@ public class UsuarioController {
 		@RequestParam String email, 
 		@RequestParam String senha, 
 		@RequestParam String funcao, 
-		@RequestParam Perfil perfil) {
+		@RequestParam Perfil perfil,
+		@RequestParam Procedimento procedimento) {
 
 		log.info("createString( " + nome + ", " + email + " )");
 
