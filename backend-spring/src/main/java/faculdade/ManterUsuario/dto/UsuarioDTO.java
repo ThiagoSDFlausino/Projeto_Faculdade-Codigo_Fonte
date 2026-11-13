@@ -6,6 +6,7 @@ import faculdade.ManterProcedimento.model.Procedimento;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 public record UsuarioDTO(
     Integer id,
@@ -19,16 +20,16 @@ public record UsuarioDTO(
     String funcao,
     @NotNull(message = "O perfil é obrigatório!")
     Perfil perfil,
-    Procedimento procedimento
+    List<Procedimento> procedimentos
 ) {
-    public static UsuarioDTO from(Usuario u) {
+    public static UsuarioDTO from(Usuario usuario) {
         return new UsuarioDTO(
-            u.getId(),
-            u.getNome(),
-            u.getEmail(),
-            u.getSenha(),
-            u.getFuncao(),
-            u.getPerfil(),
-            u.getProcedimento());
+            usuario.getId(),
+            usuario.getNome(),
+            usuario.getEmail(),
+            usuario.getSenha(),
+            usuario.getFuncao(),
+            usuario.getPerfil(),
+            usuario.getProcedimentos());
     }
 }

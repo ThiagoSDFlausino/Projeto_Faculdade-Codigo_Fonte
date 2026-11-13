@@ -1,6 +1,10 @@
 package faculdade.ManterUsuario.controller;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,13 +20,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import faculdade.ManterProcedimento.model.Procedimento;
+import faculdade.ManterProcedimento.model.ProcedimentoRepository;
 import faculdade.ManterUsuario.dto.UsuarioDTO;
 import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import faculdade.ManterUsuario.model.UsuarioRepository;
 import faculdade.ManterUsuario.service.UsuarioService;
-import faculdade.ManterProcedimento.model.ProcedimentoRepository;
-import faculdade.ManterProcedimento.model.Procedimento;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,169 +38,283 @@ import lombok.extern.log4j.Log4j2;
 @RestController
 public class UsuarioController {
 
-	@Autowired
-	private UsuarioService usuarioService;
+    @Autowired
+    private UsuarioService usuarioService;
 
-	@Autowired
-	private UsuarioRepository usuarioRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-	@Autowired
-	private ProcedimentoRepository procedimentoRepository;
+    @Autowired
+    private ProcedimentoRepository procedimentoRepository;
 
-	@Operation(summary = "Criar Usuario com parametros.", description = "Retorna uma mensagem.")
-	@PostMapping(path = "/Usuarios/param")
-	public ResponseEntity<String> createString(
-		@RequestParam String nome, 
-		@RequestParam String email, 
-		@RequestParam String senha, 
-		@RequestParam String funcao, 
-		@RequestParam Perfil perfil
-		) {
+    @Operation(
+        summary = "Criar Usuario com parametros.",
+        description = "Retorna uma mensagem."
+    )
+    @PostMapping(path = "/Usuarios/param")
+    public ResponseEntity<String> createString(
+            @RequestParam String nome,
+            @RequestParam String email,
+            @RequestParam String senha,
+            @RequestParam String funcao,
+            @RequestParam Perfil perfil) {
 
-		log.info("createString( " + nome + ", " + email + " )");
+        log.info("Criando usuário por parâmetros.");
 
-		try {
-			if (perfil == Perfil.PROFISSIONAL) {
-				return new ResponseEntity<>("Para cadastrar um profissional, utilize o cadastro por JSON " + "e informe o procedimento!",HttpStatus.BAD_REQUEST);
-			}
-			Usuario usuario = new Usuario(nome, email, senha, funcao, perfil, null);
-			usuarioService.save(usuario);
-			
-			return new ResponseEntity<>("Usuario criado com sucesso!", HttpStatus.CREATED);
-		} catch (Exception e) {
-			log.info("Exceção = " + e); 			
-			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+        try {
+            if (perfil == Perfil.PROFISSIONAL) {
+                return new ResponseEntity<>(
+                    "Para cadastrar um profissional, utilize o cadastro "
+                        + "por JSON e informe os procedimentos!",
+                    HttpStatus.BAD_REQUEST
+                );
+            }
 
-	@Operation(summary = "Criar Usuario com objeto.", description = "Retorna o objeto criado.")
-	@PostMapping(path = "/Usuarios")
-	public ResponseEntity<UsuarioDTO> create(@Valid @RequestBody UsuarioDTO usuarioDTO) {
+            Usuario usuario = new Usuario(
+                nome,
+                email,
+                senha,
+                funcao,
+                perfil,
+                new ArrayList<>()
+            );
 
-		log.info("create( " + usuarioDTO.perfil() + " )");
+            usuarioService.save(usuario);
 
-		try {
-			Procedimento procedimento = null;
+            return new ResponseEntity<>(
+                "Usuario criado com sucesso!",
+                HttpStatus.CREATED
+            );
 
-			if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
+        } catch (Exception e) {
+            log.error("Erro ao criar usuário por parâmetros.", e);
 
-				if (usuarioDTO.procedimento() == null || usuarioDTO.procedimento().getId() == null) {
-					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-				}
+            return new ResponseEntity<>(
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
-				Optional<Procedimento> procedimentoData = procedimentoRepository.findById( usuarioDTO.procedimento().getId() );
+    @Operation(
+        summary = "Criar Usuario com objeto.",
+        description = "Retorna o objeto criado."
+    )
+    @PostMapping(path = "/Usuarios")
+    public ResponseEntity<UsuarioDTO> create(
+            @Valid @RequestBody UsuarioDTO usuarioDTO) {
 
-				if (procedimentoData.isEmpty()) {
-					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-				}
+        log.info("Criando usuário com perfil {}.", usuarioDTO.perfil());
 
-				procedimento = procedimentoData.get();
+        try {
+            List<Procedimento> procedimentos = new ArrayList<>();
 
-			} else if (usuarioDTO.procedimento() != null) {
+            if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
 
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			}
+                if (usuarioDTO.procedimentos() == null
+                        || usuarioDTO.procedimentos().isEmpty()) {
 
-			Usuario usuario = new Usuario(
-				usuarioDTO.nome(),
-				usuarioDTO.email(),
-				usuarioDTO.senha(),
-				usuarioDTO.funcao(),
-				usuarioDTO.perfil(),
-				procedimento
-			);
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
 
-			Usuario usuarioSalvo = usuarioService.save(usuario);
+                Set<Integer> idsAdicionados = new HashSet<>();
 
-			return new ResponseEntity<>(UsuarioDTO.from(usuarioSalvo),HttpStatus.CREATED);
+                for (Procedimento procedimentoRecebido
+                        : usuarioDTO.procedimentos()) {
 
-		} catch (Exception e) {
-			log.error("Erro ao criar usuário.", e);
+                    if (procedimentoRecebido == null
+                            || procedimentoRecebido.getId() == null) {
 
-			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
 
-	@Operation(summary = "Atualizar Usuario com objeto.", description = "Retorna uma mensagem. O Id deve existir.")
-	@PutMapping("/Usuarios/{id}")
-	public ResponseEntity<String> update(@Valid @RequestBody UsuarioDTO usuarioDTO, @PathVariable Integer id) {
+                    Optional<Procedimento> procedimentoData =
+                        procedimentoRepository.findById(
+                            procedimentoRecebido.getId()
+                        );
 
-		log.info("update( " + usuarioDTO.perfil() + ", Id " + id + " )");
+                    if (procedimentoData.isEmpty()) {
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
 
-		try {
-			Optional<Usuario> usuarioData = usuarioService.findById(id);
+                    if (idsAdicionados.add(procedimentoRecebido.getId())) {
+                        procedimentos.add(procedimentoData.get());
+                    }
+                }
 
-			Procedimento procedimento = null;
+            } else if (usuarioDTO.procedimentos() != null
+                    && !usuarioDTO.procedimentos().isEmpty()) {
 
-			if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
 
-				if (usuarioDTO.procedimento() == null || usuarioDTO.procedimento().getId() == null) {
+            Usuario usuario = new Usuario(
+                usuarioDTO.nome(),
+                usuarioDTO.email(),
+                usuarioDTO.senha(),
+                usuarioDTO.funcao(),
+                usuarioDTO.perfil(),
+                procedimentos
+            );
 
-					return new ResponseEntity<>("O profissional deve ter um procedimento vinculado!",HttpStatus.BAD_REQUEST);
-				}
+            Usuario usuarioSalvo = usuarioService.save(usuario);
 
-				Optional<Procedimento> procedimentoData = procedimentoRepository.findById(usuarioDTO.procedimento().getId());
+            return new ResponseEntity<>(
+                UsuarioDTO.from(usuarioSalvo),
+                HttpStatus.CREATED
+            );
 
-				if (procedimentoData.isEmpty()) {
-					return new ResponseEntity<>("Procedimento não cadastrado!",HttpStatus.BAD_REQUEST);
-				}
+        } catch (Exception e) {
+            log.error("Erro ao criar usuário.", e);
 
-				procedimento = procedimentoData.get();
+            return new ResponseEntity<>(
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
-			} else if (usuarioDTO.procedimento() != null) {
-				return new ResponseEntity<>("ADM e SECRETARIA não devem ter procedimento vinculado!",HttpStatus.BAD_REQUEST);
-			}
+    @Operation(
+        summary = "Atualizar Usuario com objeto.",
+        description = "Retorna uma mensagem. O ID deve existir."
+    )
+    @PutMapping("/Usuarios/{id}")
+    public ResponseEntity<String> update(
+            @Valid @RequestBody UsuarioDTO usuarioDTO,
+            @PathVariable Integer id) {
 
-			if (usuarioData.isPresent()) {
-				Usuario usuario = usuarioData.get();
+        log.info("Atualizando usuário de ID {}.", id);
 
-				usuario.setNome(usuarioDTO.nome());
-				usuario.setEmail(usuarioDTO.email());
-				usuario.setSenha(usuarioDTO.senha());
-				usuario.setFuncao(usuarioDTO.funcao());
-				usuario.setPerfil(usuarioDTO.perfil());
-				usuario.setProcedimento(procedimento);
+        try {
+            Optional<Usuario> usuarioData = usuarioService.findById(id);
 
-				usuarioService.save(usuario);
-				
-				return ResponseEntity.ok("Usuario alterado com sucesso!"); 
-			} else {
-				return new ResponseEntity<>("Usuario não cadastrado!", HttpStatus.NOT_FOUND);
-			}
-		} catch (Exception e) {
-			return new ResponseEntity<>("Ocorreu um erro inexperado!", HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+            if (usuarioData.isEmpty()) {
+                return new ResponseEntity<>(
+                    "Usuario não cadastrado!",
+                    HttpStatus.NOT_FOUND
+                );
+            }
 
-	@Operation(summary = "Exclui um Usuario por Id.", description = "Retorna uma mensagem. O Id deve existir.")
-	@DeleteMapping("/Usuarios/{id}")
-	public ResponseEntity<String> delete(@PathVariable Integer id) {
+            List<Procedimento> procedimentos = new ArrayList<>();
 
-		log.info("delete( Id " + id + " )");
+            if (usuarioDTO.perfil() == Perfil.PROFISSIONAL) {
 
-		try {
+                if (usuarioDTO.procedimentos() == null
+                        || usuarioDTO.procedimentos().isEmpty()) {
 
-			Optional<Usuario> UsuarioData = usuarioService.findById(id);
+                    return new ResponseEntity<>(
+                        "O profissional deve ter pelo menos "
+                            + "um procedimento vinculado!",
+                        HttpStatus.BAD_REQUEST
+                    );
+                }
 
-			if (UsuarioData.isPresent()) {
-				usuarioService.deleteById(id);
-			} else {
-				return new ResponseEntity<>("Usuario não cadastrado!", HttpStatus.NOT_FOUND);
-			}
-			return ResponseEntity.ok("Usuario excluído com sucesso!");
+                Set<Integer> idsAdicionados = new HashSet<>();
 
-		} catch (Exception e) {
-			return new ResponseEntity<>("Ocorreu um erro inexperado!", HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+                for (Procedimento procedimentoRecebido
+                        : usuarioDTO.procedimentos()) {
 
-	@Operation(summary = "Recuperar Usuarios.", description = "Retorna uma coleção de Usuarios.")
-	@GetMapping("/Usuarios")
-	public @ResponseBody Iterable<Usuario> getAll() {
+                    if (procedimentoRecebido == null
+                            || procedimentoRecebido.getId() == null) {
 
-		log.info("getAll()");
+                        return new ResponseEntity<>(
+                            "Informe o ID de cada procedimento cadastrado!",
+                            HttpStatus.BAD_REQUEST
+                        );
+                    }
 
-		return usuarioRepository.findAll();
-	}
+                    Optional<Procedimento> procedimentoData =
+                        procedimentoRepository.findById(
+                            procedimentoRecebido.getId()
+                        );
 
+                    if (procedimentoData.isEmpty()) {
+                        return new ResponseEntity<>(
+                            "Procedimento não cadastrado: "
+                                + procedimentoRecebido.getId(),
+                            HttpStatus.BAD_REQUEST
+                        );
+                    }
+
+                    if (idsAdicionados.add(procedimentoRecebido.getId())) {
+                        procedimentos.add(procedimentoData.get());
+                    }
+                }
+
+            } else if (usuarioDTO.procedimentos() != null
+                    && !usuarioDTO.procedimentos().isEmpty()) {
+
+                return new ResponseEntity<>(
+                    "ADM e SECRETARIA não devem ter procedimentos vinculados!",
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+
+            Usuario usuario = usuarioData.get();
+
+            usuario.setNome(usuarioDTO.nome());
+            usuario.setEmail(usuarioDTO.email());
+            usuario.setSenha(usuarioDTO.senha());
+            usuario.setFuncao(usuarioDTO.funcao());
+            usuario.setPerfil(usuarioDTO.perfil());
+            usuario.setProcedimentos(procedimentos);
+
+            usuarioService.save(usuario);
+
+            return ResponseEntity.ok("Usuario alterado com sucesso!");
+
+        } catch (Exception e) {
+            log.error("Erro ao atualizar usuário de ID {}.", id, e);
+
+            return new ResponseEntity<>(
+                "Ocorreu um erro inesperado!",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Operation(
+        summary = "Exclui um Usuario por ID.",
+        description = "Retorna uma mensagem. O ID deve existir."
+    )
+    @DeleteMapping("/Usuarios/{id}")
+    public ResponseEntity<String> delete(@PathVariable Integer id) {
+
+        log.info("Excluindo usuário de ID {}.", id);
+
+        try {
+            Optional<Usuario> usuarioData = usuarioService.findById(id);
+
+            if (usuarioData.isPresent()) {
+                usuarioService.deleteById(id);
+
+                return ResponseEntity.ok(
+                    "Usuario excluído com sucesso!"
+                );
+            }
+
+            return new ResponseEntity<>(
+                "Usuario não cadastrado!",
+                HttpStatus.NOT_FOUND
+            );
+
+        } catch (Exception e) {
+            log.error("Erro ao excluir usuário de ID {}.", id, e);
+
+            return new ResponseEntity<>(
+                "Ocorreu um erro inesperado!",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Operation(
+        summary = "Recuperar Usuarios.",
+        description = "Retorna uma coleção de Usuarios."
+    )
+    @GetMapping("/Usuarios")
+    public @ResponseBody Iterable<Usuario> getAll() {
+
+        log.info("getAll()");
+
+        return usuarioRepository.findAll();
+    }
 }

@@ -72,7 +72,7 @@ class AgendaServiceTest {
             "senha-teste",
             null,
             Perfil.PROFISSIONAL,
-            procedimento
+            List.of(procedimento)
         );
 
         return new Agenda(

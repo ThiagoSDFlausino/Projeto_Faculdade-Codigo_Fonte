@@ -116,15 +116,17 @@ public class AgendaService {
                 "Procedimento não cadastrado!"
             ));
 
-        if (profissional.getProcedimento() == null
-                || !Objects.equals(
-                    profissional.getProcedimento().getId(),
-                    procedimento.getId()
-                )) {
+        boolean procedimentoVinculado =
+            profissional.getProcedimentos() != null
+                && profissional.getProcedimentos().stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(item ->
+                        Objects.equals(item.getId(), procedimento.getId())
+                    );
 
+        if (!procedimentoVinculado) {
             throw new IllegalArgumentException(
-                "O procedimento não corresponde ao vinculado "
-                    + "ao profissional!"
+                "O procedimento não está entre os vinculados ao profissional!"
             );
         }
 
@@ -225,7 +227,6 @@ public class AgendaService {
 
         } else {
 
-            // Ignora qualquer valor financeiro recebido externamente.
             agenda.setValorCobrado(null);
             agenda.setDataConclusao(null);
         }
