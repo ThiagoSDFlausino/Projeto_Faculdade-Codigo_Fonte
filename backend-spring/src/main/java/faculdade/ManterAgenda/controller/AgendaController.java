@@ -21,6 +21,7 @@ import faculdade.ManterAgenda.model.AgendaRepository;
 import faculdade.ManterAgenda.service.AgendaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 
@@ -65,23 +66,26 @@ public class AgendaController {
                 HttpStatus.CREATED
             );
 
+        } catch (AgendaConflitoException e) {
+            log.warn("Cadastro de agenda rejeitado: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Cadastro de agenda rejeitado: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
         } catch (Exception e) {
             log.error("Erro ao criar agenda.", e);
 
-            return new ResponseEntity<>(
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @Operation(
-        summary = "Atualizar Agenda com objeto.",
-        description = "Retorna uma mensagem. O ID deve existir."
-    )
+    @Operation( summary = "Atualizar Agenda com objeto.", description = "Retorna uma mensagem. O ID deve existir." )
     @PutMapping("/Agendas/{id}")
-    public ResponseEntity<String> update(
-            @Valid @RequestBody AgendaDTO agendaDTO,
-            @PathVariable Integer id) {
+    public ResponseEntity<String> update( @Valid @RequestBody AgendaDTO agendaDTO, @PathVariable Integer id) {
 
         log.info("Atualizando agenda de ID {}.", id);
 
@@ -112,6 +116,18 @@ public class AgendaController {
                 );
             }
 
+        } catch (AgendaConflitoException e) {
+            return new ResponseEntity<>(
+                e.getMessage(),
+                HttpStatus.CONFLICT
+            );
+
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                e.getMessage(),
+                HttpStatus.BAD_REQUEST
+            );
+
         } catch (Exception e) {
             log.error("Erro ao atualizar agenda de ID {}.", id, e);
 
@@ -122,10 +138,7 @@ public class AgendaController {
         }
     }
 
-    @Operation(
-        summary = "Exclui uma Agenda por ID.",
-        description = "Retorna uma mensagem. O ID deve existir."
-    )
+    @Operation( summary = "Exclui uma Agenda por ID.", description = "Retorna uma mensagem. O ID deve existir." )
     @DeleteMapping("/Agendas/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
 
@@ -158,10 +171,7 @@ public class AgendaController {
         }
     }
 
-    @Operation(
-        summary = "Recuperar Agendas.",
-        description = "Retorna uma coleção de Agendas."
-    )
+    @Operation( summary = "Recuperar Agendas.", description = "Retorna uma coleção de Agendas." )
     @GetMapping("/Agendas")
     public @ResponseBody Iterable<Agenda> getAll() {
 

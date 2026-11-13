@@ -22,7 +22,9 @@ import faculdade.ManterAgenda.model.AgendaRepository;
 import faculdade.ManterAgenda.model.StatusAgenda;
 import faculdade.ManterClientes.model.Cliente;
 import faculdade.ManterProcedimento.model.Procedimento;
+import faculdade.ManterProcedimento.model.ProcedimentoRepository;
 import faculdade.ManterUsuario.model.Usuario;
+import faculdade.ManterUsuario.model.UsuarioRepository;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -56,6 +58,12 @@ class AgendaServiceTest {
 
     @Mock
     private AgendaRepository agendaRepository;
+
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private ProcedimentoRepository procedimentoRepository;
 
     @Test
     void criarAgenda_ComDadosValidos_RetornaAgenda() {
