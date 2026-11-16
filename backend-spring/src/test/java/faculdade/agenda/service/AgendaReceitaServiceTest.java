@@ -17,18 +17,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import faculdade.ManterAgenda.dto.FluxoDTO;
+import faculdade.ManterAgenda.dto.ReceitaResumoDTO;
 import faculdade.ManterAgenda.model.Agenda;
 import faculdade.ManterAgenda.model.AgendaRepository;
 import faculdade.ManterAgenda.model.StatusAgenda;
-import faculdade.ManterDespesa.model.Despesa;
-import faculdade.ManterDespesa.model.DespesaRepository;
 import faculdade.ManterProcedimento.model.Procedimento;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
-class AgendaFluxoServiceTest {
+class AgendaReceitaServiceTest {
 
     @InjectMocks
     private AgendaService agendaService;
@@ -36,27 +34,25 @@ class AgendaFluxoServiceTest {
     @Mock
     private AgendaRepository agendaRepository;
 
-    @Mock
-    private DespesaRepository despesaRepository;
-
     @Test
-    void consultarFluxo_CalculaEntradasSaidasEPrevisao() {
-
-        Date data = Date.from(
-            Instant.parse("2026-11-10T12:00:00Z")
-        );
+    void consultarReceitas_RetornaListaEValoresHistoricos() {
 
         Procedimento procedimento = new Procedimento();
-        procedimento.setId(1);
-        procedimento.setNome("LASER");
-        procedimento.setPreco(200.00f);
+        procedimento.setPreco(999.00f);
 
-        Agenda concluida = new Agenda();
-        concluida.setId(1);
-        concluida.setStatusAgenda(StatusAgenda.CONCLUIDO);
-        concluida.setDataConclusao(data);
-        concluida.setValorCobrado(100.00f);
-        concluida.setProcedimento(procedimento);
+        Agenda primeira = new Agenda();
+        primeira.setId(1);
+        primeira.setStatusAgenda(StatusAgenda.CONCLUIDO);
+        primeira.setValorCobrado(100.00f);
+        primeira.setDataConclusao(new Date(0L));
+        primeira.setProcedimento(procedimento);
+
+        Agenda segunda = new Agenda();
+        segunda.setId(2);
+        segunda.setStatusAgenda(StatusAgenda.CONCLUIDO);
+        segunda.setValorCobrado(200.00f);
+        segunda.setDataConclusao(new Date(1000L));
+        segunda.setProcedimento(procedimento);
 
         when(agendaRepository.findReceitas(
             eq(StatusAgenda.CONCLUIDO),
@@ -64,57 +60,23 @@ class AgendaFluxoServiceTest {
             any(Date.class),
             eq((Integer) null),
             eq((Integer) null)
-        )).thenReturn(List.of(concluida));
+        )).thenReturn(List.of(segunda, primeira));
 
-        Agenda confirmada = new Agenda();
-        confirmada.setId(2);
-        confirmada.setDataHoraInicio(data);
-        confirmada.setStatusAgenda(StatusAgenda.CONFIRMADO);
-        confirmada.setProcedimento(procedimento);
+        ReceitaResumoDTO resultado =
+            agendaService.obterReceitas(null, null, null, null);
 
-        when(agendaRepository.findAgendasNoPeriodo(
-            eq(StatusAgenda.CONFIRMADO),
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of(confirmada));
+        log.info(resultado.quantidade());
 
-        Despesa despesa = new Despesa(
-            1,
-            data,
-            "Compra de materiais.",
-            40.00f,
-            null
-        );
-
-        when(despesaRepository.findDespesasNoPeriodo(
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of(despesa));
-
-        FluxoDTO resultado =
-            agendaService.obterFluxoCaixa(null, null);
-
-        log.info(resultado.saldo());
-
-        assertThat(resultado.entradas()).hasSize(1);
-        assertThat(resultado.aReceber()).hasSize(1);
-        assertThat(resultado.saidas()).hasSize(1);
-
-        assertThat(resultado.totalEntradas()).isEqualTo(100.00f);
-        assertThat(resultado.totalAReceber()).isEqualTo(200.00f);
-        assertThat(resultado.totalSaidas()).isEqualTo(40.00f);
-        assertThat(resultado.saldo()).isEqualTo(60.00f);
-
-        assertThat(resultado.entradas().get(0).valorCobrado())
-            .isEqualTo(100.00f);
-
-        assertThat(
-            resultado.aReceber().get(0).procedimento().getPreco()
-        ).isEqualTo(200.00f);
+        assertThat(resultado.quantidade()).isEqualTo(2);
+        assertThat(resultado.totalReceitas()).isEqualTo(300.00f);
+        assertThat(resultado.receitas()).hasSize(2);
+        assertThat(resultado.receitas().get(0).id()).isEqualTo(2);
+        assertThat(resultado.receitas().get(0).valorCobrado())
+            .isEqualTo(200.00f);
     }
 
     @Test
-    void consultarFluxo_SemRegistros_RetornaZero() {
+    void consultarReceitas_SemRegistros_RetornaTotalZero() {
 
         when(agendaRepository.findReceitas(
             eq(StatusAgenda.CONCLUIDO),
@@ -124,37 +86,23 @@ class AgendaFluxoServiceTest {
             eq((Integer) null)
         )).thenReturn(List.of());
 
-        when(agendaRepository.findAgendasNoPeriodo(
-            eq(StatusAgenda.CONFIRMADO),
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of());
+        ReceitaResumoDTO resultado =
+            agendaService.obterReceitas(null, null, null, null);
 
-        when(despesaRepository.findDespesasNoPeriodo(
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of());
-
-        FluxoDTO resultado =
-            agendaService.obterFluxoCaixa(null, null);
-
-        assertThat(resultado.entradas()).isEmpty();
-        assertThat(resultado.aReceber()).isEmpty();
-        assertThat(resultado.saidas()).isEmpty();
-
-        assertThat(resultado.totalEntradas()).isEqualTo(0.00f);
-        assertThat(resultado.totalAReceber()).isEqualTo(0.00f);
-        assertThat(resultado.totalSaidas()).isEqualTo(0.00f);
-        assertThat(resultado.saldo()).isEqualTo(0.00f);
+        assertThat(resultado.receitas()).isEmpty();
+        assertThat(resultado.quantidade()).isZero();
+        assertThat(resultado.totalReceitas()).isEqualTo(0.00f);
     }
 
     @Test
-    void consultarFluxo_ComPeriodoInvalido_ThrowsException() {
+    void consultarReceitas_ComPeriodoInvalido_ThrowsException() {
 
         assertThatThrownBy(() ->
-            agendaService.obterFluxoCaixa(
+            agendaService.obterReceitas(
                 LocalDate.of(2026, 11, 30),
-                LocalDate.of(2026, 11, 1)
+                LocalDate.of(2026, 11, 1),
+                null,
+                null
             )
         )
             .isInstanceOf(IllegalArgumentException.class)
@@ -164,58 +112,77 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
-    void consultarFluxo_ComHistoricoIncompleto_ThrowsException() {
+    void consultarReceitas_ComHistoricoIncompleto_ThrowsException() {
 
         when(agendaRepository.countReceitasSemHistorico(
             StatusAgenda.CONCLUIDO
         )).thenReturn(1L);
 
         assertThatThrownBy(() ->
-            agendaService.obterFluxoCaixa(null, null)
+            agendaService.obterReceitas(null, null, null, null)
         ).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void consultarFluxo_ComPeriodo_IncluiUltimoDiaCompleto() {
+    void consultarReceitas_ComFiltros_RepassaParametros() {
 
-        LocalDate inicio = LocalDate.of(2026, 11, 1);
-        LocalDate fim = LocalDate.of(2026, 11, 30);
-
-        Date inicioConsulta = Date.from(
+        Date inicio = Date.from(
             Instant.parse("2026-11-01T00:00:00Z")
         );
 
-        Date fimConsulta = Date.from(
+        Date fim = Date.from(
             Instant.parse("2026-12-01T00:00:00Z")
         );
 
         when(agendaRepository.findReceitas(
             StatusAgenda.CONCLUIDO,
-            inicioConsulta,
-            fimConsulta,
-            null,
-            null
+            inicio,
+            fim,
+            1,
+            2
         )).thenReturn(List.of());
 
-        when(agendaRepository.findAgendasNoPeriodo(
-            StatusAgenda.CONFIRMADO,
-            inicioConsulta,
-            fimConsulta
-        )).thenReturn(List.of());
+        ReceitaResumoDTO resultado = agendaService.obterReceitas(
+            LocalDate.of(2026, 11, 1),
+            LocalDate.of(2026, 11, 30),
+            1,
+            2
+        );
 
-        when(despesaRepository.findDespesasNoPeriodo(
-            inicioConsulta,
-            fimConsulta
-        )).thenReturn(List.of());
-
-        FluxoDTO resultado =
-            agendaService.obterFluxoCaixa(inicio, fim);
-
-        assertThat(resultado.saldo()).isEqualTo(0.00f);
+        assertThat(resultado.quantidade()).isZero();
+        assertThat(resultado.totalReceitas()).isEqualTo(0.00f);
     }
 
     @Test
-    void consultarFluxo_ComDespesaNegativa_ThrowsException() {
+    void consultarReceitas_ComProfissionalInvalido_ThrowsException() {
+
+        assertThatThrownBy(() ->
+            agendaService.obterReceitas(null, null, 0, null)
+        )
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(
+                "O filtro de profissional deve ser um ID positivo!"
+            );
+    }
+
+    @Test
+    void consultarReceitas_ComProcedimentoInvalido_ThrowsException() {
+
+        assertThatThrownBy(() ->
+            agendaService.obterReceitas(null, null, null, -1)
+        )
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(
+                "O filtro de procedimento deve ser um ID positivo!"
+            );
+    }
+
+    @Test
+    void consultarReceitas_ComValorNegativo_ThrowsException() {
+
+        Agenda agenda = new Agenda();
+        agenda.setId(1);
+        agenda.setValorCobrado(-100.00f);
 
         when(agendaRepository.findReceitas(
             eq(StatusAgenda.CONCLUIDO),
@@ -223,29 +190,10 @@ class AgendaFluxoServiceTest {
             any(Date.class),
             eq((Integer) null),
             eq((Integer) null)
-        )).thenReturn(List.of());
-
-        when(agendaRepository.findAgendasNoPeriodo(
-            eq(StatusAgenda.CONFIRMADO),
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of());
-
-        Despesa despesa = new Despesa(
-            1,
-            new Date(0L),
-            "Despesa inválida.",
-            -40.00f,
-            null
-        );
-
-        when(despesaRepository.findDespesasNoPeriodo(
-            any(Date.class),
-            any(Date.class)
-        )).thenReturn(List.of(despesa));
+        )).thenReturn(List.of(agenda));
 
         assertThatThrownBy(() ->
-            agendaService.obterFluxoCaixa(null, null)
+            agendaService.obterReceitas(null, null, null, null)
         ).isInstanceOf(IllegalStateException.class);
     }
 }
