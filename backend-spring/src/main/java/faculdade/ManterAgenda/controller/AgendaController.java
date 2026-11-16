@@ -1,8 +1,10 @@
 package faculdade.ManterAgenda.controller;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,10 +14,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import faculdade.ManterAgenda.dto.AgendaDTO;
+import faculdade.ManterAgenda.dto.FluxoDTO;
 import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import faculdade.ManterAgenda.model.Agenda;
 import faculdade.ManterAgenda.model.AgendaRepository;
@@ -200,5 +204,53 @@ public class AgendaController {
         log.info("getAll()");
 
         return agendaRepository.findAll();
+    }
+
+    @Operation(
+        summary = "Consultar Fluxo de Caixa.",
+        description = "Retorna receitas históricas, valores a receber, "
+            + "despesas e totais. O período considera UTC."
+    )
+    @GetMapping("/FluxoCaixa")
+    public ResponseEntity<FluxoDTO> obterFluxoCaixa(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim) {
+
+        log.info(
+            "Consultando fluxo de caixa: {} até {}.",
+            dataInicio,
+            dataFim
+        );
+
+        try {
+            FluxoDTO resultado = agendaService.obterFluxoCaixa(
+                dataInicio,
+                dataFim
+            );
+
+            return ResponseEntity.ok(resultado);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Consulta rejeitada: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        } catch (IllegalStateException e) {
+            log.warn("Histórico inconsistente: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+
+        } catch (Exception e) {
+            log.error("Erro ao consultar fluxo de caixa.", e);
+
+            return new ResponseEntity<>(
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

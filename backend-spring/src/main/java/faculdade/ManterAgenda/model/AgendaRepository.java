@@ -64,4 +64,21 @@ public interface AgendaRepository extends CrudRepository<Agenda, Integer> {
     long countReceitasSemHistorico(
         @Param("status") StatusAgenda status
     );
+
+    @Query("""
+        SELECT a
+        FROM Agenda a
+        LEFT JOIN FETCH a.cliente
+        LEFT JOIN FETCH a.profissional
+        LEFT JOIN FETCH a.procedimento
+        WHERE a.statusAgenda = :status
+          AND a.dataHoraInicio >= :inicio
+          AND a.dataHoraInicio < :fim
+        ORDER BY a.dataHoraInicio DESC, a.id DESC
+        """)
+    List<Agenda> findAgendasNoPeriodo(
+        @Param("status") StatusAgenda status,
+        @Param("inicio") Date inicio,
+        @Param("fim") Date fim
+    );
 }
