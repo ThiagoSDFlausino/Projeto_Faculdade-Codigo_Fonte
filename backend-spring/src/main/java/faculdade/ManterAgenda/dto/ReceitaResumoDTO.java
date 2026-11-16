@@ -1,9 +1,9 @@
-package faculdade.ManterReceita.dto;
+package faculdade.ManterAgenda.dto;
 
 import java.util.List;
 
 public record ReceitaResumoDTO(
-    List<ReceitaDTO> receitas,
+    List<AgendaDTO> receitas,
     Integer quantidade,
     Float totalReceitas
 ) {

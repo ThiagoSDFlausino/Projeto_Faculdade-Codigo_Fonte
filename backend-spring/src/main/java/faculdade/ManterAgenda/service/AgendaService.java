@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import faculdade.ManterAgenda.dto.AgendaDTO;
 import faculdade.ManterAgenda.dto.FluxoDTO;
+import faculdade.ManterAgenda.dto.ReceitaResumoDTO;
 import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import faculdade.ManterAgenda.model.Agenda;
 import faculdade.ManterAgenda.model.AgendaRepository;
@@ -25,9 +26,6 @@ import faculdade.ManterDespesa.model.Despesa;
 import faculdade.ManterDespesa.model.DespesaRepository;
 import faculdade.ManterProcedimento.model.Procedimento;
 import faculdade.ManterProcedimento.model.ProcedimentoRepository;
-import faculdade.ManterReceita.dto.ReceitaDTO;
-import faculdade.ManterReceita.dto.ReceitaResumoDTO;
-import faculdade.ManterReceita.service.ReceitaService;
 import faculdade.ManterUsuario.model.Perfil;
 import faculdade.ManterUsuario.model.Usuario;
 import faculdade.ManterUsuario.model.UsuarioRepository;
@@ -46,9 +44,6 @@ public class AgendaService {
 
     @Autowired
     private ProcedimentoRepository procedimentoRepository;
-
-    @Autowired
-    private ReceitaService receitaService;
 
     @Autowired
     private DespesaRepository despesaRepository;
@@ -315,49 +310,90 @@ public class AgendaService {
     }
 
     @Transactional(readOnly = true)
+    public ReceitaResumoDTO obterReceitas(
+            LocalDate dataInicio,
+            LocalDate dataFim,
+            Integer profissional,
+            Integer procedimento) {
+
+        validarPeriodo(dataInicio, dataFim);
+
+        if (profissional != null && profissional <= 0) {
+            throw new IllegalArgumentException(
+                "O filtro de profissional deve ser um ID positivo!"
+            );
+        }
+
+        if (procedimento != null && procedimento <= 0) {
+            throw new IllegalArgumentException(
+                "O filtro de procedimento deve ser um ID positivo!"
+            );
+        }
+
+        long receitasSemHistorico =
+            agendaRepository.countReceitasSemHistorico(
+                StatusAgenda.CONCLUIDO
+            );
+
+        if (receitasSemHistorico > 0) {
+            throw new IllegalStateException(
+                "Existem agendas concluídas sem valor ou data de conclusão. "
+                    + "Regularize o histórico financeiro antes da consulta!"
+            );
+        }
+
+        List<Agenda> agendas = agendaRepository.findReceitas(
+            StatusAgenda.CONCLUIDO,
+            inicioDoPeriodo(dataInicio),
+            fimExclusivoDoPeriodo(dataFim),
+            profissional,
+            procedimento
+        );
+
+        List<AgendaDTO> receitas = new ArrayList<>();
+        double total = 0;
+
+        for (Agenda agenda : agendas) {
+
+            Float valor = agenda.getValorCobrado();
+
+            if (valor == null || !Float.isFinite(valor) || valor < 0) {
+                throw new IllegalStateException(
+                    "A agenda " + agenda.getId()
+                        + " possui um valor financeiro inválido!"
+                );
+            }
+
+            receitas.add(AgendaDTO.from(agenda));
+            total += valor.doubleValue();
+        }
+
+        float totalReceitas = (float) total;
+
+        if (!Float.isFinite(totalReceitas)) {
+            throw new IllegalStateException(
+                "O total de receitas ultrapassou o limite numérico suportado!"
+            );
+        }
+
+        return new ReceitaResumoDTO(
+            receitas,
+            receitas.size(),
+            totalReceitas
+        );
+    }
+
+    @Transactional(readOnly = true)
     public FluxoDTO obterFluxoCaixa(
             LocalDate dataInicio,
             LocalDate dataFim) {
 
-        if (dataInicio != null
-                && dataFim != null
-                && dataFim.isBefore(dataInicio)) {
+        validarPeriodo(dataInicio, dataFim);
 
-            throw new IllegalArgumentException(
-                "A data final não pode ser anterior à data inicial!"
-            );
-        }
+        Date inicioConsulta = inicioDoPeriodo(dataInicio);
+        Date fimConsulta = fimExclusivoDoPeriodo(dataFim);
 
-        LocalDate limiteInicio = LocalDate.of(1, 1, 1);
-        LocalDate limiteFim = LocalDate.of(9999, 12, 31);
-
-        LocalDate inicio = dataInicio == null
-            ? limiteInicio
-            : dataInicio;
-
-        LocalDate fim = dataFim == null
-            ? limiteFim
-            : dataFim;
-
-        if (inicio.isBefore(limiteInicio)
-                || inicio.isAfter(limiteFim)
-                || fim.isBefore(limiteInicio)
-                || fim.isAfter(limiteFim)) {
-
-            throw new IllegalArgumentException(
-                "Informe datas entre os anos 1 e 9999!"
-            );
-        }
-
-        Date inicioConsulta = Date.from(
-            inicio.atStartOfDay(ZoneOffset.UTC).toInstant()
-        );
-
-        Date fimConsulta = Date.from(
-            fim.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant()
-        );
-
-        ReceitaResumoDTO resumoReceitas = receitaService.obter(
+        ReceitaResumoDTO resumoReceitas = obterReceitas(
             dataInicio,
             dataFim,
             null,
@@ -382,18 +418,8 @@ public class AgendaService {
         double totalAReceber = 0;
         double totalSaidas = 0;
 
-        for (ReceitaDTO receita : resumoReceitas.receitas()) {
-
-            Float valor = receita.valorCobrado();
-
-            if (valor == null || !Float.isFinite(valor) || valor < 0) {
-                throw new IllegalStateException(
-                    "A agenda " + receita.agenda()
-                        + " possui receita inválida!"
-                );
-            }
-
-            totalEntradas += valor.doubleValue();
+        for (AgendaDTO receita : resumoReceitas.receitas()) {
+            totalEntradas += receita.valorCobrado().doubleValue();
         }
 
         for (Agenda confirmada : confirmadas) {
@@ -453,6 +479,57 @@ public class AgendaService {
             (float) totalAReceber,
             (float) totalSaidas,
             (float) saldo
+        );
+    }
+
+    private void validarPeriodo(
+            LocalDate dataInicio,
+            LocalDate dataFim) {
+
+        if (dataInicio != null
+                && dataFim != null
+                && dataFim.isBefore(dataInicio)) {
+
+            throw new IllegalArgumentException(
+                "A data final não pode ser anterior à data inicial!"
+            );
+        }
+
+        LocalDate limiteInicio = LocalDate.of(1, 1, 1);
+        LocalDate limiteFim = LocalDate.of(9999, 12, 31);
+
+        if ((dataInicio != null
+                && (dataInicio.isBefore(limiteInicio)
+                    || dataInicio.isAfter(limiteFim)))
+                || (dataFim != null
+                    && (dataFim.isBefore(limiteInicio)
+                        || dataFim.isAfter(limiteFim)))) {
+
+            throw new IllegalArgumentException(
+                "Informe datas entre os anos 1 e 9999!"
+            );
+        }
+    }
+
+    private Date inicioDoPeriodo(LocalDate dataInicio) {
+
+        LocalDate inicio = dataInicio == null
+            ? LocalDate.of(1, 1, 1)
+            : dataInicio;
+
+        return Date.from(
+            inicio.atStartOfDay(ZoneOffset.UTC).toInstant()
+        );
+    }
+
+    private Date fimExclusivoDoPeriodo(LocalDate dataFim) {
+
+        LocalDate fim = dataFim == null
+            ? LocalDate.of(9999, 12, 31)
+            : dataFim;
+
+        return Date.from(
+            fim.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant()
         );
     }
 }

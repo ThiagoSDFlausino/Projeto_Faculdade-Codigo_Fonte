@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import faculdade.ManterAgenda.dto.AgendaDTO;
 import faculdade.ManterAgenda.dto.FluxoDTO;
+import faculdade.ManterAgenda.dto.ReceitaResumoDTO;
 import faculdade.ManterAgenda.exception.AgendaConflitoException;
 import faculdade.ManterAgenda.model.Agenda;
 import faculdade.ManterAgenda.model.AgendaRepository;
@@ -204,6 +205,64 @@ public class AgendaController {
         log.info("getAll()");
 
         return agendaRepository.findAll();
+    }
+
+    @Operation(
+        summary = "Consultar Receitas.",
+        description = "Retorna agendas concluídas, quantidade e total. "
+            + "Filtros opcionais. O período considera UTC."
+    )
+    @GetMapping("/Receitas")
+    public ResponseEntity<ReceitaResumoDTO> obterReceitas(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim,
+
+            @RequestParam(required = false)
+            Integer profissional,
+
+            @RequestParam(required = false)
+            Integer procedimento) {
+
+        log.info(
+            "Consultando receitas: {} até {}, profissional {}, procedimento {}.",
+            dataInicio,
+            dataFim,
+            profissional,
+            procedimento
+        );
+
+        try {
+            ReceitaResumoDTO resultado = agendaService.obterReceitas(
+                dataInicio,
+                dataFim,
+                profissional,
+                procedimento
+            );
+
+            return ResponseEntity.ok(resultado);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Consulta de receitas rejeitada: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        } catch (IllegalStateException e) {
+            log.warn("Histórico inconsistente: {}", e.getMessage());
+
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+
+        } catch (Exception e) {
+            log.error("Erro ao consultar receitas.", e);
+
+            return new ResponseEntity<>(
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @Operation(
