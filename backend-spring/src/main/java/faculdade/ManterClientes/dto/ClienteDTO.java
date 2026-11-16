@@ -19,8 +19,6 @@ public record ClienteDTO(
     @NotBlank(message = "O email é obrigatório!") 
     String email,
     Date dataNascimento,
-    String foto,
-    List<String> tags,
     String observacoes,
     @NotNull(message = "O status do cliente é obrigatório!")
     StatusCliente statusCliente
@@ -33,8 +31,6 @@ public record ClienteDTO(
             cliente.getTelefone(),
             cliente.getEmail(),
             cliente.getDataNascimento(),
-            cliente.getFoto(),
-            cliente.getTags(),
             cliente.getObservacoes(),
             cliente.getStatusCliente()
         );

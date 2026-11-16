@@ -50,8 +50,6 @@ public class ClienteController {
                 clienteDTO.telefone(),
                 clienteDTO.email(),
                 clienteDTO.dataNascimento(),
-                clienteDTO.foto(),
-                clienteDTO.tags(),
                 clienteDTO.observacoes(),
                 clienteDTO.statusCliente()
             ));
@@ -79,8 +77,6 @@ public class ClienteController {
                     clienteDTO.telefone(),
                     clienteDTO.email(),
                     clienteDTO.dataNascimento(),
-                    clienteDTO.foto(),
-                    clienteDTO.tags(),
                     clienteDTO.observacoes(),
                     clienteDTO.statusCliente()
                 );
