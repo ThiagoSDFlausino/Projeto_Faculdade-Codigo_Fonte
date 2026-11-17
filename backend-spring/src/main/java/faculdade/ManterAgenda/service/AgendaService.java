@@ -4,15 +4,19 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import faculdade.ManterAgenda.dto.AgendaDTO;
+import faculdade.ManterAgenda.dto.FechamentoDTO;
 import faculdade.ManterAgenda.dto.FluxoDTO;
 import faculdade.ManterAgenda.dto.ReceitaResumoDTO;
 import faculdade.ManterAgenda.exception.AgendaConflitoException;
@@ -56,9 +60,7 @@ public class AgendaService {
     public Agenda save(Agenda agenda) {
 
         if (agenda == null) {
-            throw new IllegalArgumentException(
-                "A agenda é obrigatória!"
-            );
+            throw new IllegalArgumentException("A agenda é obrigatória!");
         }
 
         if (agenda.getStatusAgenda() == null) {
@@ -67,19 +69,18 @@ public class AgendaService {
             );
         }
 
-        Agenda agendaAnterior = null;
+        Agenda anterior = null;
 
         if (agenda.getId() != null) {
-            agendaAnterior = agendaRepository
+            anterior = agendaRepository
                 .findByIdParaAtualizacao(agenda.getId())
                 .orElseThrow(() -> new IllegalArgumentException(
                     "Agenda não cadastrada!"
                 ));
         }
 
-        if (agendaAnterior != null
-                && agendaAnterior.getStatusAgenda()
-                    == StatusAgenda.CONCLUIDO) {
+        if (anterior != null
+                && anterior.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
 
             if (agenda.getStatusAgenda() != StatusAgenda.CONCLUIDO) {
                 throw new AgendaConflitoException(
@@ -88,12 +89,12 @@ public class AgendaService {
                 );
             }
 
-            Float valorHistorico = agendaAnterior.getValorCobrado();
+            Float valorHistorico = anterior.getValorCobrado();
 
             if (valorHistorico == null
                     || !Float.isFinite(valorHistorico)
                     || valorHistorico < 0
-                    || agendaAnterior.getDataConclusao() == null) {
+                    || anterior.getDataConclusao() == null) {
 
                 throw new AgendaConflitoException(
                     "A agenda concluída possui histórico financeiro "
@@ -105,9 +106,9 @@ public class AgendaService {
             if (agenda.getCliente() == null
                     || agenda.getProfissional() == null
                     || agenda.getProcedimento() == null
-                    || agendaAnterior.getCliente() == null
-                    || agendaAnterior.getProfissional() == null
-                    || agendaAnterior.getProcedimento() == null) {
+                    || anterior.getCliente() == null
+                    || anterior.getProfissional() == null
+                    || anterior.getProcedimento() == null) {
 
                 throw new AgendaConflitoException(
                     "Não é permitido alterar os vínculos "
@@ -117,25 +118,25 @@ public class AgendaService {
 
             boolean vinculosAlterados =
                 !Objects.equals(
-                    agendaAnterior.getCliente().getId(),
+                    anterior.getCliente().getId(),
                     agenda.getCliente().getId()
                 )
                 || !Objects.equals(
-                    agendaAnterior.getProfissional().getId(),
+                    anterior.getProfissional().getId(),
                     agenda.getProfissional().getId()
                 )
                 || !Objects.equals(
-                    agendaAnterior.getProcedimento().getId(),
+                    anterior.getProcedimento().getId(),
                     agenda.getProcedimento().getId()
                 );
 
             boolean horariosAlterados =
                 !Objects.equals(
-                    agendaAnterior.getDataHoraInicio(),
+                    anterior.getDataHoraInicio(),
                     agenda.getDataHoraInicio()
                 )
                 || !Objects.equals(
-                    agendaAnterior.getDataHoraFim(),
+                    anterior.getDataHoraFim(),
                     agenda.getDataHoraFim()
                 );
 
@@ -146,14 +147,14 @@ public class AgendaService {
                 );
             }
 
-            agendaAnterior.setObservacoes(agenda.getObservacoes());
+            anterior.setObservacoes(agenda.getObservacoes());
 
-            return agendaRepository.save(agendaAnterior);
+            return agendaRepository.save(anterior);
         }
 
-        if (agendaAnterior != null
-                && (agendaAnterior.getValorCobrado() != null
-                    || agendaAnterior.getDataConclusao() != null)) {
+        if (anterior != null
+                && (anterior.getValorCobrado() != null
+                    || anterior.getDataConclusao() != null)) {
 
             throw new AgendaConflitoException(
                 "A agenda possui dados financeiros, mas não está concluída. "
@@ -223,7 +224,7 @@ public class AgendaService {
                 "Procedimento não cadastrado!"
             ));
 
-        boolean procedimentoVinculado =
+        boolean vinculado =
             profissional.getProcedimentos() != null
                 && profissional.getProcedimentos().stream()
                     .filter(Objects::nonNull)
@@ -231,7 +232,7 @@ public class AgendaService {
                         Objects.equals(item.getId(), procedimento.getId())
                     );
 
-        if (!procedimentoVinculado) {
+        if (!vinculado) {
             throw new IllegalArgumentException(
                 "O procedimento não está entre os vinculados ao profissional!"
             );
@@ -239,14 +240,15 @@ public class AgendaService {
 
         if (agenda.getStatusAgenda() != StatusAgenda.CANCELADO) {
 
-            Integer agendaIgnorada =
-                agenda.getId() == null ? -1 : agenda.getId();
+            Integer ignorada = agenda.getId() == null
+                ? -1
+                : agenda.getId();
 
             boolean conflito = agendaRepository.existeConflito(
                 profissional.getId(),
                 agenda.getDataHoraInicio(),
                 agenda.getDataHoraFim(),
-                agendaIgnorada,
+                ignorada,
                 StatusAgenda.CANCELADO
             );
 
@@ -330,12 +332,11 @@ public class AgendaService {
             );
         }
 
-        long receitasSemHistorico =
-            agendaRepository.countReceitasSemHistorico(
-                StatusAgenda.CONCLUIDO
-            );
+        long semHistorico = agendaRepository.countReceitasSemHistorico(
+            StatusAgenda.CONCLUIDO
+        );
 
-        if (receitasSemHistorico > 0) {
+        if (semHistorico > 0) {
             throw new IllegalStateException(
                 "Existem agendas concluídas sem valor ou data de conclusão. "
                     + "Regularize o histórico financeiro antes da consulta!"
@@ -368,9 +369,7 @@ public class AgendaService {
             total += valor.doubleValue();
         }
 
-        float totalReceitas = (float) total;
-
-        if (!Float.isFinite(totalReceitas)) {
+        if (!Float.isFinite((float) total)) {
             throw new IllegalStateException(
                 "O total de receitas ultrapassou o limite numérico suportado!"
             );
@@ -379,7 +378,7 @@ public class AgendaService {
         return new ReceitaResumoDTO(
             receitas,
             receitas.size(),
-            totalReceitas
+            (float) total
         );
     }
 
@@ -390,25 +389,19 @@ public class AgendaService {
 
         validarPeriodo(dataInicio, dataFim);
 
-        Date inicioConsulta = inicioDoPeriodo(dataInicio);
-        Date fimConsulta = fimExclusivoDoPeriodo(dataFim);
+        Date inicio = inicioDoPeriodo(dataInicio);
+        Date fim = fimExclusivoDoPeriodo(dataFim);
 
-        ReceitaResumoDTO resumoReceitas = obterReceitas(
-            dataInicio,
-            dataFim,
-            null,
-            null
+        ReceitaResumoDTO resumo = obterReceitas(
+            dataInicio, dataFim, null, null
         );
 
         List<Agenda> confirmadas = agendaRepository.findAgendasNoPeriodo(
-            StatusAgenda.CONFIRMADO,
-            inicioConsulta,
-            fimConsulta
+            StatusAgenda.CONFIRMADO, inicio, fim
         );
 
         List<Despesa> despesas = despesaRepository.findDespesasNoPeriodo(
-            inicioConsulta,
-            fimConsulta
+            inicio, fim
         );
 
         List<AgendaDTO> aReceber = new ArrayList<>();
@@ -418,7 +411,7 @@ public class AgendaService {
         double totalAReceber = 0;
         double totalSaidas = 0;
 
-        for (AgendaDTO receita : resumoReceitas.receitas()) {
+        for (AgendaDTO receita : resumo.receitas()) {
             totalEntradas += receita.valorCobrado().doubleValue();
         }
 
@@ -472,7 +465,7 @@ public class AgendaService {
         }
 
         return new FluxoDTO(
-            resumoReceitas.receitas(),
+            resumo.receitas(),
             aReceber,
             saidas,
             (float) totalEntradas,
@@ -482,12 +475,104 @@ public class AgendaService {
         );
     }
 
+    @Transactional(
+        readOnly = true,
+        isolation = Isolation.REPEATABLE_READ
+    )
+    public FechamentoDTO obterFechamento(
+            LocalDate periodoInicio,
+            LocalDate periodoFim) {
+
+        if (periodoInicio == null || periodoFim == null) {
+            throw new IllegalArgumentException(
+                "Informe o início e o fim do período!"
+            );
+        }
+
+        validarPeriodo(periodoInicio, periodoFim);
+
+        FluxoDTO fluxo = obterFluxoCaixa(periodoInicio, periodoFim);
+
+        Map<Integer, Usuario> profissionais = new LinkedHashMap<>();
+        Map<Integer, Integer> quantidades = new LinkedHashMap<>();
+        Map<Integer, Double> faturamentos = new LinkedHashMap<>();
+
+        for (AgendaDTO atendimento : fluxo.entradas()) {
+
+            Usuario profissional = atendimento.profissional();
+
+            if (profissional == null || profissional.getId() == null) {
+                throw new IllegalStateException(
+                    "A agenda " + atendimento.id()
+                        + " não possui profissional válido!"
+                );
+            }
+
+            Integer id = profissional.getId();
+
+            profissionais.putIfAbsent(id, profissional);
+            quantidades.merge(id, 1, Integer::sum);
+            faturamentos.merge(
+                id,
+                atendimento.valorCobrado().doubleValue(),
+                Double::sum
+            );
+        }
+
+        List<FechamentoDTO.ProfissionalResumoDTO> porProfissional =
+            new ArrayList<>();
+
+        for (Map.Entry<Integer, Usuario> item
+                : profissionais.entrySet()) {
+
+            Integer id = item.getKey();
+            Usuario profissional = item.getValue();
+            float total = faturamentos.get(id).floatValue();
+
+            if (!Float.isFinite(total)) {
+                throw new IllegalStateException(
+                    "O faturamento do profissional ultrapassou "
+                        + "o limite numérico suportado!"
+                );
+            }
+
+            porProfissional.add(
+                new FechamentoDTO.ProfissionalResumoDTO(
+                    id,
+                    profissional.getNome(),
+                    profissional.getFuncao(),
+                    quantidades.get(id),
+                    total
+                )
+            );
+        }
+
+        porProfissional.sort((primeiro, segundo) ->
+            Float.compare(
+                segundo.totalFaturamento(),
+                primeiro.totalFaturamento()
+            )
+        );
+
+        return new FechamentoDTO(
+            periodoInicio,
+            periodoFim,
+            fluxo.totalEntradas(),
+            fluxo.totalSaidas(),
+            fluxo.saldo(),
+            fluxo.totalAReceber(),
+            fluxo.entradas().size(),
+            porProfissional,
+            fluxo.entradas(),
+            fluxo.saidas()
+        );
+    }
+
     private void validarPeriodo(
             LocalDate dataInicio,
             LocalDate dataFim) {
 
-        if (dataInicio != null
-                && dataFim != null
+        if (dataInicio != null && dataFim != null
                 && dataFim.isBefore(dataInicio)) {
 
             throw new IllegalArgumentException(
@@ -495,15 +580,15 @@ public class AgendaService {
             );
         }
 
-        LocalDate limiteInicio = LocalDate.of(1, 1, 1);
-        LocalDate limiteFim = LocalDate.of(9999, 12, 31);
+        LocalDate minimo = LocalDate.of(1, 1, 1);
+        LocalDate maximo = LocalDate.of(9999, 12, 31);
 
         if ((dataInicio != null
-                && (dataInicio.isBefore(limiteInicio)
-                    || dataInicio.isAfter(limiteFim)))
+                && (dataInicio.isBefore(minimo)
+                    || dataInicio.isAfter(maximo)))
                 || (dataFim != null
-                    && (dataFim.isBefore(limiteInicio)
-                        || dataFim.isAfter(limiteFim)))) {
+                    && (dataFim.isBefore(minimo)
+                        || dataFim.isAfter(maximo)))) {
 
             throw new IllegalArgumentException(
                 "Informe datas entre os anos 1 e 9999!"
@@ -512,7 +597,6 @@ public class AgendaService {
     }
 
     private Date inicioDoPeriodo(LocalDate dataInicio) {
-
         LocalDate inicio = dataInicio == null
             ? LocalDate.of(1, 1, 1)
             : dataInicio;
@@ -523,7 +607,6 @@ public class AgendaService {
     }
 
     private Date fimExclusivoDoPeriodo(LocalDate dataFim) {
-
         LocalDate fim = dataFim == null
             ? LocalDate.of(9999, 12, 31)
             : dataFim;

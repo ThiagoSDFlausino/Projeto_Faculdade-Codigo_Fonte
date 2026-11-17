@@ -20,6 +20,8 @@ public record AgendaDTO(
 
     Float valorCobrado,
 
+    Date dataConclusao,
+
     String observacoes,
 
     @NotNull(message = "O profissional é obrigatório!")
@@ -41,6 +43,7 @@ public record AgendaDTO(
             agenda.getDataHoraInicio(),
             agenda.getDataHoraFim(),
             agenda.getValorCobrado(),
+            agenda.getDataConclusao(),
             agenda.getObservacoes(),
             agenda.getProfissional(),
             agenda.getCliente(),
