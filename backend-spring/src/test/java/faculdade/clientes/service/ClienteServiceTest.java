@@ -32,8 +32,6 @@ class ClienteServiceTest {
         "11999999999",
         "cliente@exemplo.com",
         new Date(0L),
-        "",
-        List.of("Teste"),
         "Cliente cadastrado para teste.",
         StatusCliente.ATIVO
     );
@@ -44,8 +42,6 @@ class ClienteServiceTest {
         "",
         "email-invalido",
         null,
-        "",
-        List.of(),
         "Cliente inválido.",
         null
     );

@@ -24,8 +24,6 @@ public class Cliente {
     private String telefone;
     private String email;
     private Date dataNascimento;
-    private String foto;
-    private List<String> tags;
     private String observacoes;
     
     @Enumerated(EnumType.STRING)
@@ -34,14 +32,12 @@ public class Cliente {
     public Cliente() {
     }
 
-    public Cliente(Integer id, String nome, String telefone, String email, Date dataNascimento, String foto, List<String> tags, String observacoes, StatusCliente statusCliente) {
+    public Cliente(Integer id, String nome, String telefone, String email, Date dataNascimento,  String observacoes, StatusCliente statusCliente) {
         this.id = id;
         this.nome = nome;
         this.telefone = telefone;
         this.email = email;
         this.dataNascimento = dataNascimento;
-        this.foto = foto;
-        this.tags = tags;
         this.observacoes = observacoes;
         this.statusCliente = statusCliente;
     }

@@ -38,13 +38,18 @@ public class ClienteController {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    @Operation(summary = "Criar Cliente com objeto.", description = "Retorna o objeto criado.")
+    @Operation(
+        summary = "Criar Cliente com objeto.",
+        description = "Retorna o objeto criado."
+    )
     @PostMapping(path = "/Clientes")
-    public ResponseEntity<ClienteDTO> create(@Valid @RequestBody ClienteDTO clienteDTO) {
+    public ResponseEntity<ClienteDTO> create(
+            @Valid @RequestBody ClienteDTO clienteDTO) {
 
-        log.info("create( " + clienteDTO + " )");
+        log.info("Criando cliente.");
+
         try {
-            Cliente c = clienteService.save(new Cliente(
+            Cliente cliente = new Cliente(
                 null,
                 clienteDTO.nome(),
                 clienteDTO.telefone(),
@@ -52,26 +57,40 @@ public class ClienteController {
                 clienteDTO.dataNascimento(),
                 clienteDTO.observacoes(),
                 clienteDTO.statusCliente()
-            ));
+            );
 
-            return new ResponseEntity<>(ClienteDTO.from(c), HttpStatus.CREATED);
+            Cliente salvo = clienteService.save(cliente);
+
+            return new ResponseEntity<>(
+                ClienteDTO.from(salvo),
+                HttpStatus.CREATED
+            );
+
         } catch (Exception e) {
-            log.error("Erro ao criar cliente: ", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Erro ao criar cliente.", e);
+
+            return new ResponseEntity<>(
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    @Operation(summary = "Atualizar Cliente com objeto.", description = "Retorna uma mensagem. O Id deve existir.")
+    @Operation(
+        summary = "Atualizar Cliente com objeto.",
+        description = "Retorna uma mensagem. O ID deve existir."
+    )
     @PutMapping("/Clientes/{id}")
-    public ResponseEntity<String> update(@Valid @RequestBody ClienteDTO clienteDTO, @PathVariable Integer id) {
+    public ResponseEntity<String> update(
+            @Valid @RequestBody ClienteDTO clienteDTO,
+            @PathVariable Integer id) {
 
-        log.info("update( " + clienteDTO + ", Id " + id + " )");
+        log.info("Atualizando cliente de ID {}.", id);
 
         try {
-        Optional<Cliente> clienteData = clienteService.findById(id);
-        
+            Optional<Cliente> clienteData = clienteService.findById(id);
+
             if (clienteData.isPresent()) {
-                Cliente c = new Cliente(
+                Cliente cliente = new Cliente(
                     id,
                     clienteDTO.nome(),
                     clienteDTO.telefone(),
@@ -80,43 +99,72 @@ public class ClienteController {
                     clienteDTO.observacoes(),
                     clienteDTO.statusCliente()
                 );
-                clienteService.save(c);
 
-                return ResponseEntity.ok("Cliente alterado com sucesso!");
-            } else {
-                return new ResponseEntity<>("Cliente não cadastrado!", HttpStatus.NOT_FOUND);
+                clienteService.save(cliente);
+
+                return ResponseEntity.ok(
+                    "Cliente alterado com sucesso!"
+                );
             }
+
+            return new ResponseEntity<>(
+                "Cliente não cadastrado!",
+                HttpStatus.NOT_FOUND
+            );
+
         } catch (Exception e) {
-            return new ResponseEntity<>("Ocorreu um erro inesperado!", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Erro ao atualizar cliente de ID {}.", id, e);
+
+            return new ResponseEntity<>(
+                "Ocorreu um erro inesperado!",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    @Operation(summary = "Exclui um Cliente por Id.", description = "Retorna uma mensagem. O Id deve existir.")
+    @Operation(
+        summary = "Excluir Cliente por ID.",
+        description = "Retorna uma mensagem. O ID deve existir."
+    )
     @DeleteMapping("/Clientes/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
 
-        log.info("delete( Id " + id + " )");
+        log.info("Excluindo cliente de ID {}.", id);
 
         try {
             Optional<Cliente> clienteData = clienteService.findById(id);
 
             if (clienteData.isPresent()) {
                 clienteService.deleteById(id);
-            } else {
-                return new ResponseEntity<>("Cliente não cadastrado!", HttpStatus.NOT_FOUND);
+
+                return ResponseEntity.ok(
+                    "Cliente excluído com sucesso!"
+                );
             }
-            return ResponseEntity.ok("Cliente excluído com sucesso!");
+
+            return new ResponseEntity<>(
+                "Cliente não cadastrado!",
+                HttpStatus.NOT_FOUND
+            );
 
         } catch (Exception e) {
-            return new ResponseEntity<>("Ocorreu um erro inesperado!", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Erro ao excluir cliente de ID {}.", id, e);
+
+            return new ResponseEntity<>(
+                "Ocorreu um erro inesperado!",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    @Operation(summary = "Recuperar Clientes.", description = "Retorna uma coleção de Clientes.")
+    @Operation(
+        summary = "Recuperar Clientes.",
+        description = "Retorna uma coleção de Clientes."
+    )
     @GetMapping("/Clientes")
     public @ResponseBody Iterable<Cliente> getAll() {
 
-        log.info("getAll()");
+        log.info("Listando clientes.");
 
         return clienteRepository.findAll();
     }
