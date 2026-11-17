@@ -1,7 +1,9 @@
 package faculdade.ManterUsuario.config;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,6 +21,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://127.0.0.1:3000}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -56,9 +61,7 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/v3/api-docs/**"
                 ).permitAll()
-                .requestMatchers(
-                    "/usuarios-api/**"
-                ).hasRole("ADM")
+                .requestMatchers("/usuarios-api/**").hasRole("ADM")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(resource -> resource
@@ -75,24 +78,19 @@ public class SecurityConfig {
 
         CorsConfiguration cors = new CorsConfiguration();
 
-        cors.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://127.0.0.1:3000"
-        ));
+        cors.setAllowedOrigins(
+            Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList()
+        );
 
         cors.setAllowedMethods(List.of(
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "OPTIONS"
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
 
         cors.setAllowedHeaders(List.of(
-            "Authorization",
-            "Content-Type",
-            "Accept"
+            "Authorization", "Content-Type", "Accept"
         ));
 
         cors.setAllowCredentials(false);
