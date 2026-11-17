@@ -413,7 +413,6 @@ api.interceptors.request.use((config) => {
         // O Java ainda não possui consulta individual.
         // Busca a lista e seleciona o cliente na resposta.
         config.springClienteId = url.slice(antiga.length + 1);
-        config.url = nova;
       }
 
       if (metodo === "post" || metodo === "put") {
@@ -457,7 +456,7 @@ api.interceptors.response.use(
 
     if (response.config.springClienteId) {
       const cliente = response.data.find(
-        (item) => item.id === response.config.springClienteId
+        (item) => String(item.id) === String(response.config.springClienteId)
       );
 
       if (!cliente) {

@@ -168,4 +168,19 @@ public class ClienteController {
 
         return clienteRepository.findAll();
     }
+
+    @GetMapping("/Clientes/{id}")
+    public ResponseEntity<ClienteDTO> getById(
+            @PathVariable Integer id) {
+
+        Optional<Cliente> clienteData = clienteService.findById(id);
+
+        if (clienteData.isPresent()) {
+            return ResponseEntity.ok(
+                ClienteDTO.from(clienteData.get())
+            );
+        }
+
+        return ResponseEntity.notFound().build();
+    }
 }

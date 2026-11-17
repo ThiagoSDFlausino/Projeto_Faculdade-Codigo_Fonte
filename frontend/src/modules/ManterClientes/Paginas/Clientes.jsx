@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Plus, Search, Phone } from "lucide-react";
+import { Plus, Search, Phone, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
@@ -82,6 +82,7 @@ export default function Clientes() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ ...empty });
+  const [editingCliente, setEditingCliente] = useState(null);
 
   const {
     data: clientes = [],
@@ -114,6 +115,41 @@ export default function Clientes() {
     },
   });
 
+  const editMut = useMutation({
+    mutationFn: ({ id, payload }) =>
+      api.put(`/clientes/${id}`, payload),
+  
+    onSuccess: () => {
+      invalidateClienteImpact(qc);
+      qc.invalidateQueries({ queryKey: ["clientes"] });
+  
+      setOpen(false);
+      setEditingCliente(null);
+      setForm({ ...empty });
+  
+      toast.success("Cliente atualizado!");
+    },
+  
+    onError: (erro) => {
+      toast.error(mensagemErro(erro));
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id) => api.delete(`/clientes/${id}`),
+  
+    onSuccess: () => {
+      invalidateClienteImpact(qc);
+      qc.invalidateQueries({ queryKey: ["clientes"] });
+  
+      toast.success("Cliente excluído!");
+    },
+  
+    onError: (erro) => {
+      toast.error(mensagemErro(erro));
+    },
+  });
+
   const filtered = clientes.filter((cliente) =>
     (cliente.name ?? "")
       .toLowerCase()
@@ -130,13 +166,22 @@ export default function Clientes() {
 
   const submit = (event) => {
     event.preventDefault();
-
-    createMut.mutate({
+  
+    const payload = {
       ...form,
       name: form.name.trim(),
       phone: form.phone.trim(),
       email: form.email.trim(),
-    });
+    };
+  
+    if (editingCliente) {
+      editMut.mutate({
+        id: editingCliente.id,
+        payload,
+      });
+    } else {
+      createMut.mutate(payload);
+    }
   };
 
   return (
@@ -159,7 +204,7 @@ export default function Clientes() {
             <DialogContent className="rounded-3xl border-rose-100">
               <DialogHeader>
                 <DialogTitle className="font-display">
-                  Novo Cliente
+                  {editingCliente ? "Editar Cliente" : "Novo Cliente"}
                 </DialogTitle>
               </DialogHeader>
 
@@ -248,10 +293,14 @@ export default function Clientes() {
                   <Button
                     data-testid="client-submit-button"
                     type="submit"
-                    disabled={createMut.isPending}
+                    disabled={createMut.isPending || editMut.isPending}
                     className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl"
                   >
-                    {createMut.isPending ? "Salvando..." : "Salvar"}
+                    {createMut.isPending || editMut.isPending
+                      ? "Salvando..."
+                      : editingCliente
+                        ? "Salvar alterações"
+                        : "Salvar"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -327,7 +376,54 @@ export default function Clientes() {
                       </p>
                     </div>
 
+                    <div className="flex items-center gap-2">
                     <StatusBadge status={cliente.status} />
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      title="Editar cliente"
+                      onClick={(event) => {
+                        event.stopPropagation();
+
+                        setEditingCliente(cliente);
+
+                        setForm({
+                          name: cliente.name ?? "",
+                          phone: cliente.phone ?? "",
+                          email: cliente.email ?? "",
+                          birthdate: cliente.birthdate ?? "",
+                          notes: cliente.notes ?? "",
+                          status: cliente.status ?? "Ativo",
+                        });
+
+                        setOpen(true);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4 text-blue-600" />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      title="Excluir cliente"
+                      onClick={(event) => {
+                        event.stopPropagation();
+
+                        const confirmar = window.confirm(
+                          `Deseja realmente excluir ${cliente.name}?`
+                        );
+
+                        if (confirmar) {
+                          deleteMut.mutate(cliente.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
+                  </div>
                   </div>
                 </Card>
               </motion.div>
