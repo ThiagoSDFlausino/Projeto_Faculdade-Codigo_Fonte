@@ -15,7 +15,6 @@ public record UsuarioDTO(
     @Email(message = "Email inválido!") 
     @NotBlank(message = "O email é obrigatório!") 
     String email,
-    @NotBlank(message = "A senha é obrigatória!")
     String senha,
     String funcao,
     @NotNull(message = "O perfil é obrigatório!")

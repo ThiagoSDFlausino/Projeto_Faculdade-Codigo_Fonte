@@ -90,7 +90,7 @@ export default function Equipe() {
 
   const procNames = (ids = []) => {
     if (!ids.length) return "Todos os procedimentos";
-    return ids.map((id) => procedures.find((p) => p.id === id)?.name || id).join(", ");
+    return ids.map((id) => procedures.find((p) => p.id === id)?.name || id).join("; ");
   };
 
   return (
@@ -184,7 +184,7 @@ export default function Equipe() {
                       <p className="font-semibold text-slate-800 truncate">{m.name}</p>
                       <p className="text-xs text-slate-400 truncate">{m.email}</p>
                     </div>
-                    {!m.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Inativo</span>}
+                    {!m.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Ativo</span>}
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-rose-50">
                     <div className="min-w-0">
@@ -192,7 +192,7 @@ export default function Equipe() {
                         <ShieldCheck className="w-3 h-3" /> {ROLE_LABEL[m.role]}
                       </span>
                       {(m.funcao || m.specialty) && (
-                        <p className="text-xs text-slate-400 mt-1 truncate">{m.funcao || m.specialty}{m.role === "profissional" ? ` · ${m.commission_pct}%` : ""}</p>
+                        <p className="text-xs text-slate-400 mt-1 truncate"></p>
                       )}
                       {m.role === "profissional" && (
                         <p className="text-[10px] text-slate-400 mt-0.5 truncate" title={procNames(m.procedimento_ids)}>
@@ -223,21 +223,29 @@ export default function Equipe() {
         <DialogContent className="rounded-3xl border-rose-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">Editar Usuário</DialogTitle></DialogHeader>
           {editing && (
-            <form onSubmit={(e) => {
+            <form
+            onSubmit={(e) => {
               e.preventDefault();
+          
               const p = {
                 name: editing.name,
+                email: editing.email,
                 role: editing.role,
                 funcao: editing.funcao,
-                specialty: editing.funcao,
-                commission_pct: parseFloat(editing.commission_pct) || 0,
-                procedimento_ids: editing.procedimento_ids || [],
-                active: editing.active,
-                photo: editing.photo || "",
+                procedimento_ids:
+                  editing.role === "profissional"
+                    ? editing.procedimento_ids || []
+                    : [],
               };
-              if (editing.password?.trim()) p.password = editing.password.trim();
+          
+              if (editing.password && editing.password.trim() !== "") {
+                p.password = editing.password;
+              }
+          
               updateMut.mutate({ id: editing.id, p });
-            }} className="space-y-3">
+            }}
+            className="space-y-3"
+          >
               <div><Label>Nome</Label><Input className="mt-1" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
               <div>
                 <Label>Nova senha (opcional)</Label>

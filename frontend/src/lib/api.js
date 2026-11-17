@@ -255,17 +255,14 @@ function payloadJava(tipo, payload) {
   }
 
   if (tipo === "usuario") {
-    if (!payload.password?.trim()) {
-      throw new Error(
-        "O backend atual exige senha também na atualização do usuário. " +
-          "Informe uma senha; não utilize o hash armazenado."
-      );
-    }
-
     return {
       nome: payload.name?.trim() ?? "",
       email: payload.email?.trim() ?? "",
-      senha: payload.password,
+      senha:
+        typeof payload.password === "string" &&
+        payload.password.trim() !== ""
+          ? payload.password
+          : null,
       funcao: payload.funcao ?? "",
       perfil: PERFIS[payload.role] || payload.role,
       procedimentos:

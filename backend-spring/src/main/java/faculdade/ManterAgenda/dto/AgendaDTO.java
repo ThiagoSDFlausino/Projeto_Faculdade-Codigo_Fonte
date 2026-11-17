@@ -8,7 +8,6 @@ import faculdade.ManterClientes.model.Cliente;
 import faculdade.ManterProcedimento.model.Procedimento;
 import faculdade.ManterUsuario.model.Usuario;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 
 public record AgendaDTO(
     Integer id,
@@ -19,8 +18,6 @@ public record AgendaDTO(
     @NotNull(message = "A data e hora de fim são obrigatórias!")
     Date dataHoraFim,
 
-    @NotNull(message = "O valor cobrado é obrigatório!")
-    @PositiveOrZero(message = "O valor cobrado não pode ser negativo!")
     Float valorCobrado,
 
     String observacoes,

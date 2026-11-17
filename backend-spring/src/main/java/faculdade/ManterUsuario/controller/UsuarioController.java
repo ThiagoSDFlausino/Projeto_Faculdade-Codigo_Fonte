@@ -284,16 +284,28 @@ public class UsuarioController {
                 );
             }
 
+            // Valida a nova senha antes de alterar o usuário.
+            String novaSenha = null;
+
+            if (usuarioDTO.senha() != null
+                    && !usuarioDTO.senha().isBlank()) {
+
+                novaSenha = usuarioService.codificarSenha(
+                    usuarioDTO.senha()
+                );
+            }
+
             Usuario usuario = usuarioData.get();
 
             usuario.setNome(usuarioDTO.nome());
             usuario.setEmail(usuarioDTO.email());
-            usuario.setSenha(
-                usuarioService.codificarSenha(usuarioDTO.senha())
-            );
             usuario.setFuncao(usuarioDTO.funcao());
             usuario.setPerfil(usuarioDTO.perfil());
             usuario.setProcedimentos(procedimentos);
+
+            if (novaSenha != null) {
+                usuario.setSenha(novaSenha);
+            }
 
             usuarioService.save(usuario);
 
