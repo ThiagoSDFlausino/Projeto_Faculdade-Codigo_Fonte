@@ -11,7 +11,7 @@ import Clientes from "@/modules/ManterClientes/Paginas/Clientes";
 import ClienteDetalhe from "@/modules/ManterClientes/Paginas/ClienteDetalhe";
 import Agendamentos from "@/modules/ManterAgendamento/Paginas/Agendamentos";
 import Procedimentos from "@/modules/ManterProcedimento/Paginas/Procedimentos";
-import Equipe from "@/modules/ManterUsuario/Paginas/Equipe";
+import Equipe from "@/modules/ManterUsuario/Paginas/Usuario";
 import FluxoCaixa from "@/modules/ManterFinanceiro/FluxoCaixa/Paginas/FluxoCaixa";
 import Fechamento from "@/modules/ManterFinanceiro/Fechamento/Paginas/Fechamento";
 
