@@ -1,3 +1,6 @@
+/**
+ * Modelo de entidade para agenda.
+ */
 package faculdade.ManterAgenda.model;
 
 import java.util.Date;

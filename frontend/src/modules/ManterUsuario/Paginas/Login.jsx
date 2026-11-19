@@ -1,4 +1,7 @@
-﻿import { useState, useEffect } from "react";
+﻿/**
+ * Página de login.
+ */
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2, ArrowRight } from "lucide-react";

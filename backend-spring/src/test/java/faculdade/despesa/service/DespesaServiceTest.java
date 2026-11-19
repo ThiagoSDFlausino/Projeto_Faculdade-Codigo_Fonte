@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de despesa.
+ */
 package faculdade.ManterDespesa.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,6 +63,9 @@ class DespesaServiceTest {
     private DespesaRepository despesaRepository;
 
     @Test
+    /**
+     * Testa o retorno de despesa válida.
+     */
     void criarDespesa_ComDadosValidos_RetornaDespesa() {
 
         when(despesaRepository.save(despesa_VALIDA))
@@ -72,6 +78,9 @@ class DespesaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando os dados são inválidos.
+     */
     void criarDespesa_ComDadosInvalidos_ThrowsException() {
 
         when(despesaRepository.save(despesa_INVALIDA))
@@ -83,6 +92,9 @@ class DespesaServiceTest {
     }
 
     @Test
+    /**
+     * Testa a exclusão de despesa válida.
+     */
     void excluirDespesa_ComIdExistente() {
 
         assertThatCode(() ->
@@ -91,6 +103,9 @@ class DespesaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando a despesa não existe.
+     */
     void excluirDespesa_ComIdInexistente_ThrowException() {
 
         doThrow(new RuntimeException())
@@ -103,6 +118,9 @@ class DespesaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o retorno de todas as despesas.
+     */
     void chamar_getAll() {
 
         List<Despesa> despesas = new ArrayList<>();

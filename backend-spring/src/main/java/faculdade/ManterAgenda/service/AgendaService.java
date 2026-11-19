@@ -1,3 +1,6 @@
+/**
+ * Camada de serviço de agendas. Concentra as regras de negócio relacionadas a agendas.
+ */
 package faculdade.ManterAgenda.service;
 
 import java.time.LocalDate;
@@ -52,10 +55,21 @@ public class AgendaService {
     @Autowired
     private DespesaRepository despesaRepository;
 
+    /**
+     * Recupera todas as agendas cadastradas no banco de dados.
+     *
+     * @return lista contendo todas as agendas encontradas.
+     */
     public Iterable<Agenda> getAll() {
         return agendaRepository.findAll();
     }
 
+    /**
+     * Cria uma nova agenda com os dados fornecidos.
+     *
+     * @param agenda objeto contendo os dados da agenda a ser criada.
+     * @return objeto criado.
+     */
     @Transactional
     public Agenda save(Agenda agenda) {
 
@@ -285,10 +299,21 @@ public class AgendaService {
         return agendaRepository.save(agenda);
     }
 
+    /**
+     * Recupera uma agenda específica com o ID fornecido.
+     *
+     * @param id ID da agenda a ser recuperada.
+     * @return objeto contendo os dados da agenda encontrada.
+     */
     public Optional<Agenda> findById(Integer id) {
         return agendaRepository.findById(id);
     }
 
+    /**
+     * Exclui uma agenda existente com o ID fornecido.
+     *
+     * @param id ID da agenda a ser excluída.
+     */
     @Transactional
     public void deleteById(Integer id) {
 
@@ -311,6 +336,15 @@ public class AgendaService {
         agendaRepository.deleteById(id);
     }
 
+    /**
+     * Recupera as receitas de uma agenda específica.
+     *
+     * @param dataInicio data de início do período.
+     * @param dataFim data de fim do período.
+     * @param profissional ID do profissional.
+     * @param procedimento ID do procedimento.
+     * @return objeto contendo os dados das receitas encontradas.
+     */
     @Transactional(readOnly = true)
     public ReceitaResumoDTO obterReceitas(
             LocalDate dataInicio,
@@ -382,6 +416,13 @@ public class AgendaService {
         );
     }
 
+    /**
+     * Recupera o fluxo de caixa de uma agenda específica.
+     *
+     * @param dataInicio data de início do período.
+     * @param dataFim data de fim do período.
+     * @return objeto contendo os dados do fluxo de caixa encontrados.
+     */
     @Transactional(readOnly = true)
     public FluxoDTO obterFluxoCaixa(
             LocalDate dataInicio,
@@ -475,6 +516,13 @@ public class AgendaService {
         );
     }
 
+    /**
+     * Recupera a prévia de fechamento financeiro de uma agenda específica.
+     *
+     * @param periodoInicio data de início do período.
+     * @param periodoFim data de fim do período.
+     * @return objeto contendo os dados da prévia de fechamento financeiro encontrados.
+     */
     @Transactional(
         readOnly = true,
         isolation = Isolation.REPEATABLE_READ
@@ -568,6 +616,12 @@ public class AgendaService {
         );
     }
 
+    /**
+     * Valida o período.
+     *
+     * @param dataInicio data de início do período.
+     * @param dataFim data de fim do período.
+     */
     private void validarPeriodo(
             LocalDate dataInicio,
             LocalDate dataFim) {
@@ -596,6 +650,12 @@ public class AgendaService {
         }
     }
 
+    /**
+     * Recupera o início do período.
+     *
+     * @param dataInicio data de início do período.
+     * @return data de início do período.
+     */
     private Date inicioDoPeriodo(LocalDate dataInicio) {
         LocalDate inicio = dataInicio == null
             ? LocalDate.of(1, 1, 1)
@@ -606,6 +666,12 @@ public class AgendaService {
         );
     }
 
+    /**
+     * Recupera o fim exclusivo do período.
+     *
+     * @param dataFim data de fim do período.
+     * @return data de fim do período.
+     */
     private Date fimExclusivoDoPeriodo(LocalDate dataFim) {
         LocalDate fim = dataFim == null
             ? LocalDate.of(9999, 12, 31)

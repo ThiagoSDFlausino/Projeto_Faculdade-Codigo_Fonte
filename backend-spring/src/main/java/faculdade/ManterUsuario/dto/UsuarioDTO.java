@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de usuário entre cliente e API.
+ */
 package faculdade.ManterUsuario.dto;
 
 import faculdade.ManterUsuario.model.Perfil;

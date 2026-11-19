@@ -1,3 +1,6 @@
+/**
+ * Modelo de entidade para despesa.
+ */
 package faculdade.ManterDespesa.model;
 
 import java.util.Date;

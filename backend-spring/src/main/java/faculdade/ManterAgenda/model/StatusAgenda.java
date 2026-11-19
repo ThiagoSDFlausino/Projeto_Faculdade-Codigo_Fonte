@@ -1,3 +1,6 @@
+/**
+ * Enumeração de status de agenda.
+ */
 package faculdade.ManterAgenda.model;
 
 public enum StatusAgenda {

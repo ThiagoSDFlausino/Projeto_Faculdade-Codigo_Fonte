@@ -1,3 +1,7 @@
+/**
+ * Arquivo: ClienteController.java
+ * Controller REST de clientes. Expõe os endpoints de CRUD para clientes.
+ */
 package faculdade.ManterClientes.controller;
 
 import java.util.Optional;
@@ -38,6 +42,12 @@ public class ClienteController {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    /**
+     * Cria um novo cliente com os dados fornecidos.
+     *
+     * @param clienteDTO objeto contendo os dados do cliente a ser criado.
+     * @return objeto criado.
+     */
     @Operation(
         summary = "Criar Cliente com objeto.",
         description = "Retorna o objeto criado."
@@ -75,6 +85,13 @@ public class ClienteController {
         }
     }
 
+    /**
+     * Atualiza um cliente existente com os dados fornecidos.
+     *
+     * @param clienteDTO objeto contendo os dados do cliente a ser atualizado.
+     * @param id ID do cliente a ser atualizado.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation(
         summary = "Atualizar Cliente com objeto.",
         description = "Retorna uma mensagem. O ID deve existir."
@@ -122,6 +139,12 @@ public class ClienteController {
         }
     }
 
+    /**
+     * Exclui um cliente existente com o ID fornecido.
+     *
+     * @param id ID do cliente a ser excluído.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation(
         summary = "Excluir Cliente por ID.",
         description = "Retorna uma mensagem. O ID deve existir."
@@ -157,6 +180,11 @@ public class ClienteController {
         }
     }
 
+    /**
+     * Recupera todos os clientes cadastrados no banco de dados.
+     *
+     * @return lista contendo todos os clientes encontrados.
+     */
     @Operation(
         summary = "Recuperar Clientes.",
         description = "Retorna uma coleção de Clientes."
@@ -169,6 +197,16 @@ public class ClienteController {
         return clienteRepository.findAll();
     }
 
+    /**
+     * Recupera um cliente específico com o ID fornecido.
+     *
+     * @param id ID do cliente a ser recuperado.
+     * @return objeto contendo os dados do cliente encontrado.
+     */
+    @Operation(
+        summary = "Recuperar Cliente por ID.",
+        description = "Retorna um Cliente."
+    )
     @GetMapping("/Clientes/{id}")
     public ResponseEntity<ClienteDTO> getById(
             @PathVariable Integer id) {

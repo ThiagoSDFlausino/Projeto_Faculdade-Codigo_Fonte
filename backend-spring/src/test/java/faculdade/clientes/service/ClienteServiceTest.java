@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de cliente.
+ */
 package faculdade.ManterClientes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,6 +56,9 @@ class ClienteServiceTest {
     private ClienteRepository clienteRepository;
 
     @Test
+    /**
+     * Testa o retorno de cliente válido.
+     */
     void criarCliente_ComDadosValidos_RetornaCliente() {
 
         when(clienteRepository.save(cliente_VALIDO))
@@ -65,6 +71,9 @@ class ClienteServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando os dados são inválidos.
+     */
     void criarCliente_ComDadosInvalidos_ThrowsException() {
 
         when(clienteRepository.save(cliente_INVALIDO))

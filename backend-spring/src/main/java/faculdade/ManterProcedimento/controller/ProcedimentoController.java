@@ -1,3 +1,6 @@
+/**
+ * Controller REST de procedimentos. Expõe os endpoints de CRUD para procedimentos.
+ */
 package faculdade.ManterProcedimento.controller;
 
 import java.util.Optional;
@@ -36,6 +39,12 @@ public class ProcedimentoController {
     @Autowired
     private ProcedimentoRepository procedimentoRepository;
 
+    /**
+     * Cria um novo procedimento com os dados fornecidos.
+     *
+     * @param procedimentoDTO objeto contendo os dados do procedimento a ser criado.
+     * @return objeto criado.
+     */
     @Operation( summary = "Criar Procedimento com objeto.", description = "Retorna o objeto criado.")
     @PostMapping(path = "/Procedimentos")
     public ResponseEntity<ProcedimentoDTO> create(
@@ -65,6 +74,13 @@ public class ProcedimentoController {
         }
     }
 
+    /**
+     * Atualiza um procedimento existente com os dados fornecidos.
+     *
+     * @param procedimentoDTO objeto contendo os dados do procedimento a ser atualizado.
+     * @param id ID do procedimento a ser atualizado.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation( summary = "Atualizar Procedimento com objeto.", description = "Retorna uma mensagem. O ID deve existir.")
     @PutMapping("/Procedimentos/{id}")
     public ResponseEntity<String> update(
@@ -102,6 +118,12 @@ public class ProcedimentoController {
         }
     }
 
+    /**
+     * Exclui um procedimento existente com o ID fornecido.
+     *
+     * @param id ID do procedimento a ser excluído.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation( summary = "Exclui um Procedimento por ID.", description = "Retorna uma mensagem. O ID deve existir.")
     @DeleteMapping("/Procedimentos/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
@@ -126,6 +148,11 @@ public class ProcedimentoController {
         }
     }
 
+    /**
+     * Recupera todos os procedimentos cadastrados no banco de dados.
+     *
+     * @return lista contendo todos os procedimentos encontrados.
+     */
     @Operation( summary = "Recuperar Procedimentos.", description = "Retorna uma coleção de Procedimentos.")
     @GetMapping("/Procedimentos")
     public @ResponseBody Iterable<Procedimento> getAll() {

@@ -1,3 +1,6 @@
+/**
+ * API para comunicação com o backend.
+ */
 import axios from "axios";
 
 export const API = (
@@ -106,6 +109,9 @@ function valorNumerico(valor, campo) {
   return numero;
 }
 
+/**
+ * Converte o usuário para o formato tela.
+ */
 function usuarioTela(usuario) {
   const role =
     usuario.role ||
@@ -129,6 +135,9 @@ function usuarioTela(usuario) {
   };
 }
 
+/**
+ * Converte o cliente para o formato tela.
+ */
 function clienteTela(cliente) {
   return {
     id: String(cliente.id),
@@ -146,6 +155,9 @@ function clienteTela(cliente) {
   };
 }
 
+/**
+ * Converte o procedimento para o formato tela.
+ */
 function procedimentoTela(procedimento) {
   return {
     id: String(procedimento.id),
@@ -161,6 +173,9 @@ function procedimentoTela(procedimento) {
   };
 }
 
+/**
+ * Converte a agenda para o formato tela.
+ */
 function agendaTela(agenda) {
   return {
     id: String(agenda.id),
@@ -185,6 +200,9 @@ function agendaTela(agenda) {
   };
 }
 
+/**
+ * Converte a despesa para o formato tela.
+ */
 function despesaTela(despesa) {
   return {
     id: String(despesa.id),
@@ -198,6 +216,9 @@ function despesaTela(despesa) {
   };
 }
 
+/**
+ * Conversores para os formatos tela.
+ */
 const CONVERSORES = {
   cliente: clienteTela,
   procedimento: procedimentoTela,
@@ -206,6 +227,9 @@ const CONVERSORES = {
   usuario: usuarioTela,
 };
 
+/**
+ * Converte o payload para o formato Java.
+ */
 function payloadJava(tipo, payload) {
   if (tipo === "cliente") {
     return {
@@ -302,6 +326,9 @@ function payloadJava(tipo, payload) {
   return payload;
 }
 
+/**
+ * Converte o item de fluxo para o formato tela.
+ */
 function itemFluxo(agenda, entrada) {
   return {
     agendamento_id: agenda.id,
@@ -322,6 +349,9 @@ function itemFluxo(agenda, entrada) {
   };
 }
 
+/**
+ * Converte o fluxo para o formato tela.
+ */
 function fluxoTela(fluxo) {
   return {
     entradas: (fluxo.entradas ?? []).map((item) => itemFluxo(item, true)),
@@ -341,6 +371,9 @@ function fluxoTela(fluxo) {
   };
 }
 
+/**
+ * Verifica se o recurso é pendente.
+ */
 function recursoPendente(url) {
   return (
     url === "/dashboard" ||

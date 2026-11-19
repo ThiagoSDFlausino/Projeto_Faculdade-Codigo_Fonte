@@ -1,3 +1,6 @@
+/**
+ * Modelo de entidade para usuário.
+ */
 package faculdade.ManterUsuario.model;
 
 import jakarta.annotation.Nullable;

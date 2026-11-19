@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de fechamento de agenda.
+ */
 package faculdade.ManterAgenda.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +40,9 @@ class AgendaFechamentoServiceTest {
     private DespesaRepository despesaRepository;
 
     @Test
+    /**
+     * Testa o cálculo de totais por profissional.
+     */
     void obterFechamento_CalculaTotaisPorProfissional() {
 
         Usuario profissional = new Usuario();
@@ -103,6 +109,9 @@ class AgendaFechamentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o período é nulo.
+     */
     void obterFechamento_SemPeriodo_ThrowsException() {
 
         assertThatThrownBy(() ->
@@ -113,6 +122,9 @@ class AgendaFechamentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o período é invertido.
+     */
     void obterFechamento_ComPeriodoInvertido_ThrowsException() {
 
         assertThatThrownBy(() ->

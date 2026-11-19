@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de procedimento.
+ */
 package faculdade.ManterProcedimento.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +55,9 @@ class ProcedimentoServiceTest {
     private ProcedimentoRepository procedimentoRepository;
 
     @Test
+    /**
+     * Testa o retorno de procedimento válido.
+     */
     void criarProcedimento_ComDadosValidos_RetornaProcedimento() {
 
         when(procedimentoRepository.save(procedimento_VALIDO))
@@ -64,6 +70,9 @@ class ProcedimentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando os dados são inválidos.
+     */
     void criarProcedimento_ComDadosInvalidos_ThrowsException() {
 
         when(procedimentoRepository.save(procedimento_INVALIDO))
@@ -75,6 +84,9 @@ class ProcedimentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa a exclusão de procedimento válido.
+     */
     void excluirProcedimento_ComIdExistente() {
 
         assertThatCode(() ->
@@ -83,6 +95,9 @@ class ProcedimentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o procedimento não existe.
+     */
     void excluirProcedimento_ComIdInexistente_ThrowException() {
 
         doThrow(new RuntimeException())
@@ -95,6 +110,9 @@ class ProcedimentoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o retorno de todos os procedimentos.
+     */
     void chamar_getAll() {
 
         List<Procedimento> procedimentos = new ArrayList<>();

@@ -1,3 +1,6 @@
+/**
+ * Enumeração de perfis de usuário.
+ */
 package faculdade.ManterUsuario.model;
 
 public enum Perfil {

@@ -1,3 +1,6 @@
+/**
+ * Enumeração de status de cliente.
+ */
 package faculdade.ManterClientes.model;
 
 public enum StatusCliente {

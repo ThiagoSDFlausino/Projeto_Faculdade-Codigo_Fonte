@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de receita de agenda.
+ */
 package faculdade.ManterAgenda.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +38,9 @@ class AgendaReceitaServiceTest {
     private AgendaRepository agendaRepository;
 
     @Test
+    /**
+     * Testa o retorno de lista e valores históricos.
+     */
     void consultarReceitas_RetornaListaEValoresHistoricos() {
 
         Procedimento procedimento = new Procedimento();
@@ -76,6 +82,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o retorno zero quando não há registros.
+     */
     void consultarReceitas_SemRegistros_RetornaTotalZero() {
 
         when(agendaRepository.findReceitas(
@@ -95,6 +104,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o período é inválido.
+     */
     void consultarReceitas_ComPeriodoInvalido_ThrowsException() {
 
         assertThatThrownBy(() ->
@@ -112,6 +124,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o histórico é incompleto.
+     */
     void consultarReceitas_ComHistoricoIncompleto_ThrowsException() {
 
         when(agendaRepository.countReceitasSemHistorico(
@@ -124,6 +139,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o repasse de parâmetros.
+     */
     void consultarReceitas_ComFiltros_RepassaParametros() {
 
         Date inicio = Date.from(
@@ -154,6 +172,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o profissional é inválido.
+     */
     void consultarReceitas_ComProfissionalInvalido_ThrowsException() {
 
         assertThatThrownBy(() ->
@@ -166,6 +187,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o procedimento é inválido.
+     */
     void consultarReceitas_ComProcedimentoInvalido_ThrowsException() {
 
         assertThatThrownBy(() ->
@@ -178,6 +202,9 @@ class AgendaReceitaServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o valor é negativo.
+     */
     void consultarReceitas_ComValorNegativo_ThrowsException() {
 
         Agenda agenda = new Agenda();

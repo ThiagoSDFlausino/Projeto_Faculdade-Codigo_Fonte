@@ -1,3 +1,7 @@
+/**
+ * Configuração de segurança para a API.
+ * Define autenticação JWT e configurações de CORS.
+ */
 package faculdade.ManterUsuario.config;
 
 import java.util.Arrays;

@@ -1,3 +1,6 @@
+/**
+ * Handler de exceções globais para o controller de usuários.
+ */
 package faculdade.ManterUsuario.exception;
 
 import java.util.HashMap;

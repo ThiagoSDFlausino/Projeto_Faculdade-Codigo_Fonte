@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de agenda entre a API e o cliente.
+ */
 package faculdade.ManterAgenda.dto;
 
 import java.util.Date;

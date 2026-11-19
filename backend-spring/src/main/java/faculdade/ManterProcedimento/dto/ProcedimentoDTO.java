@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de procedimento entre a API e o cliente.
+ */
 package faculdade.ManterProcedimento.dto;
 
 import faculdade.ManterProcedimento.model.CategoriaProcedimento;

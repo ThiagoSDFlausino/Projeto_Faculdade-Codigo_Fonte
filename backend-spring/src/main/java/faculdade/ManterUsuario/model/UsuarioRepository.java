@@ -1,3 +1,6 @@
+/**
+ * Repositório JPA para operações de banco de dados relacionadas a usuários.
+ */
 package faculdade.ManterUsuario.model;
 
 import java.util.List;

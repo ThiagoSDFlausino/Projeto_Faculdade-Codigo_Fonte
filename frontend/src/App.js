@@ -1,3 +1,6 @@
+/**
+ * Aplicação principal.
+ */
 import "@/App.css";
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -15,6 +18,9 @@ import Equipe from "@/modules/ManterUsuario/Paginas/Usuario";
 import FluxoCaixa from "@/modules/ManterFinanceiro/FluxoCaixa/Paginas/FluxoCaixa";
 import Fechamento from "@/modules/ManterFinanceiro/Fechamento/Paginas/Fechamento";
 
+/**
+ * Componente de proteção de rotas.
+ */
 function Protected({ children, roles }) {
   const { user, ready } = useAuth();
   if (!ready) return <div className="min-h-screen flex items-center justify-center text-rose-400">Carregando...</div>;
@@ -23,6 +29,9 @@ function Protected({ children, roles }) {
   return <Layout>{children}</Layout>;
 }
 
+/**
+ * Componente principal.
+ */
 function App() {
   useEffect(() => {
     document.title = "Projeto Faculdade";

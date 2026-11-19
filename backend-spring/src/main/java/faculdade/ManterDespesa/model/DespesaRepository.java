@@ -1,3 +1,6 @@
+/**
+ * Repositório JPA para operações de banco de dados relacionadas a despesas.
+ */
 package faculdade.ManterDespesa.model;
 
 import java.util.Date;

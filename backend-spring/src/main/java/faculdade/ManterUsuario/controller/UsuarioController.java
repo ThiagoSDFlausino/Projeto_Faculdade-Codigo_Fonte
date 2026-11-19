@@ -1,3 +1,6 @@
+/**
+ * Controller REST de usuários. Expõe os endpoints de autenticação e/ou gerenciamento de usuários por meio de requisições HTTP.
+ */
 package faculdade.ManterUsuario.controller;
 
 import java.util.ArrayList;

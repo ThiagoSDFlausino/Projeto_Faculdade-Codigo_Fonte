@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de cliente entre a API e o cliente.
+ */
 package faculdade.ManterClientes.dto;
 
 import java.util.Date;

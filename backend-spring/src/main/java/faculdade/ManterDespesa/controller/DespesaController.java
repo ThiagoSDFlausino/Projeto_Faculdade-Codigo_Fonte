@@ -1,3 +1,6 @@
+/**
+ * Controller REST de despesas. Expõe os endpoints de CRUD para despesas.
+ */
 package faculdade.ManterDespesa.controller;
 
 import java.util.Optional;
@@ -41,6 +44,12 @@ public class DespesaController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    /**
+     * Cria uma nova despesa com os dados fornecidos.
+     *
+     * @param despesaDTO objeto contendo os dados da despesa a ser criada.
+     * @return objeto criado.
+     */
     @Operation( summary = "Criar Despesa com objeto.", description = "Retorna o objeto criado." )
     @PostMapping(path = "/Despesas")
     public ResponseEntity<DespesaDTO> create( @Valid @RequestBody DespesaDTO despesaDTO) {
@@ -77,6 +86,13 @@ public class DespesaController {
         }
     }
 
+    /**
+     * Atualiza uma despesa existente com os dados fornecidos.
+     *
+     * @param despesaDTO objeto contendo os dados da despesa a ser atualizada.
+     * @param id ID da despesa a ser atualizada.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation( summary = "Atualizar Despesa com objeto.", description = "Retorna uma mensagem. O ID deve existir." )
     @PutMapping("/Despesas/{id}")
     public ResponseEntity<String> update( @Valid @RequestBody DespesaDTO despesaDTO, @PathVariable Integer id) {
@@ -119,6 +135,12 @@ public class DespesaController {
         }
     }
 
+    /**
+     * Exclui uma despesa existente com o ID fornecido.
+     *
+     * @param id ID da despesa a ser excluída.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation( summary = "Exclui uma Despesa por ID.", description = "Retorna uma mensagem. O ID deve existir." )
     @DeleteMapping("/Despesas/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
@@ -145,6 +167,11 @@ public class DespesaController {
         }
     }
 
+    /**
+     * Recupera todas as despesas cadastradas no banco de dados.
+     *
+     * @return lista contendo todas as despesas encontradas.
+     */
     @Operation( summary = "Recuperar Despesas.", description = "Retorna uma coleção de Despesas." )
     @GetMapping("/Despesas")
     public @ResponseBody Iterable<Despesa> getAll() {

@@ -1,4 +1,7 @@
-﻿import { useMemo, useState } from "react";
+﻿/**
+ * Página de despesas.
+ */
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, ArrowUpCircle, Wallet } from "lucide-react";

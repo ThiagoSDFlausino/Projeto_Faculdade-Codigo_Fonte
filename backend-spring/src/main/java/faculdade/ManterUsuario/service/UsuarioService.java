@@ -1,3 +1,6 @@
+/**
+  * Camada de serviço de usuários. Concentra as regras de negócio relacionadas a contas, autenticação e operações de usuários.
+ */
 package faculdade.ManterUsuario.service;
 
 import java.nio.charset.StandardCharsets;

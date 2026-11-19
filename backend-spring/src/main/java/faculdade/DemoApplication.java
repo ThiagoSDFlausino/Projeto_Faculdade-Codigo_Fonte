@@ -1,3 +1,6 @@
+/**
+ * Classe principal do aplicativo Spring Boot.
+ */
 package faculdade;
 
 import org.springframework.boot.SpringApplication;

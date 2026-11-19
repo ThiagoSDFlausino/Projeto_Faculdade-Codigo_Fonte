@@ -1,3 +1,6 @@
+/**
+ * Configuração do OpenAPI para documentação da API.
+ */
 package faculdade.ManterUsuario.config;
 
 import org.springframework.context.annotation.Bean;

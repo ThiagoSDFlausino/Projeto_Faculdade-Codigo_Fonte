@@ -1,3 +1,6 @@
+/**
+ * Modelo de entidade para cliente.
+ */
 package faculdade.ManterClientes.model;
 
 import java.util.Date;

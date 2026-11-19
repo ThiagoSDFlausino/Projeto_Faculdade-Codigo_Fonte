@@ -1,3 +1,6 @@
+/**
+ * Modelo de entidade para procedimento.
+ */
 package faculdade.ManterProcedimento.model;
 
 import jakarta.annotation.Nullable;

@@ -1,3 +1,6 @@
+/**
+ * Configuração do JWT para autenticação.
+ */
 package faculdade.ManterUsuario.config;
 
 import java.util.Base64;

@@ -1,3 +1,6 @@
+/**
+ * Controller REST de agendas. Expõe os endpoints de CRUD para agendas.
+ */
 package faculdade.ManterAgenda.controller;
 
 import java.time.LocalDate;
@@ -46,6 +49,12 @@ public class AgendaController {
     @Autowired
     private AgendaRepository agendaRepository;
 
+    /**
+     * Cria uma nova agenda com os dados fornecidos.
+     *
+     * @param agendaDTO objeto contendo os dados da agenda a ser criada.
+     * @return objeto criado.
+     */
     @Operation(summary = "Criar Agenda com objeto.")
     @PostMapping("/Agendas")
     public ResponseEntity<AgendaDTO> create(
@@ -86,6 +95,13 @@ public class AgendaController {
         }
     }
 
+    /**
+     * Atualiza uma agenda existente com os dados fornecidos.
+     *
+     * @param agendaDTO objeto contendo os dados da agenda a ser atualizada.
+     * @param id ID da agenda a ser atualizada.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation(summary = "Atualizar Agenda.")
     @PutMapping("/Agendas/{id}")
     public ResponseEntity<String> update(
@@ -140,6 +156,12 @@ public class AgendaController {
         }
     }
 
+    /**
+     * Exclui uma agenda existente com o ID fornecido.
+     *
+     * @param id ID da agenda a ser excluída.
+     * @return mensagem de sucesso ou erro.
+     */
     @Operation(summary = "Excluir Agenda.")
     @DeleteMapping("/Agendas/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
@@ -174,12 +196,26 @@ public class AgendaController {
         }
     }
 
+    /**
+     * Recupera todas as agendas cadastradas no banco de dados.
+     *
+     * @return lista contendo todas as agendas encontradas.
+     */
     @Operation(summary = "Listar Agendas.")
     @GetMapping("/Agendas")
     public @ResponseBody Iterable<Agenda> getAll() {
         return agendaRepository.findAll();
     }
 
+    /**
+     * Recupera as receitas de uma agenda específica.
+     *
+     * @param dataInicio data de início do período.
+     * @param dataFim data de fim do período.
+     * @param profissional ID do profissional.
+     * @param procedimento ID do procedimento.
+     * @return objeto contendo os dados das receitas encontradas.
+     */
     @Operation(summary = "Consultar Receitas.")
     @GetMapping("/Receitas")
     public ResponseEntity<ReceitaResumoDTO> obterReceitas(
@@ -215,6 +251,13 @@ public class AgendaController {
         }
     }
 
+    /**
+     * Recupera o fluxo de caixa de uma agenda específica.
+     *
+     * @param dataInicio data de início do período.
+     * @param dataFim data de fim do período.
+     * @return objeto contendo os dados do fluxo de caixa encontrados.
+     */
     @Operation(summary = "Consultar Fluxo de Caixa.")
     @GetMapping("/FluxoCaixa")
     public ResponseEntity<FluxoDTO> obterFluxoCaixa(
@@ -245,6 +288,14 @@ public class AgendaController {
         }
     }
 
+    /**
+     * Recupera a prévia de fechamento financeiro de uma agenda específica.
+     *
+     * @param periodoInicio data de início do período.
+     * @param periodoFim data de fim do período.
+     * @param jwt token de autenticação.
+     * @return objeto contendo os dados da prévia de fechamento financeiro encontrados.
+     */
     @Operation(
         summary = "Consultar prévia de fechamento financeiro.",
         description = "Somente ADM. Consulta sem persistência. Período em UTC."

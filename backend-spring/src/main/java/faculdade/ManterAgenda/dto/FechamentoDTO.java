@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de fechamento entre a API e o cliente.
+ */
 package faculdade.ManterAgenda.dto;
 
 import java.time.LocalDate;

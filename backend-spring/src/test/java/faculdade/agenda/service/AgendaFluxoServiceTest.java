@@ -1,3 +1,6 @@
+/**
+ * Testes para o serviço de fluxo de agenda.
+ */
 package faculdade.ManterAgenda.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +43,9 @@ class AgendaFluxoServiceTest {
     private DespesaRepository despesaRepository;
 
     @Test
+    /**
+     * Testa o cálculo de entradas, saídas e previsão.
+     */
     void consultarFluxo_CalculaEntradasSaidasEPrevisao() {
 
         Date data = Date.from(
@@ -114,6 +120,9 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o retorno zero quando não há registros.
+     */
     void consultarFluxo_SemRegistros_RetornaZero() {
 
         when(agendaRepository.findReceitas(
@@ -149,6 +158,9 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o período é inválido.
+     */
     void consultarFluxo_ComPeriodoInvalido_ThrowsException() {
 
         assertThatThrownBy(() ->
@@ -164,6 +176,9 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando o histórico é incompleto.
+     */
     void consultarFluxo_ComHistoricoIncompleto_ThrowsException() {
 
         when(agendaRepository.countReceitasSemHistorico(
@@ -176,6 +191,9 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o inclusão do último dia completo no período.
+     */
     void consultarFluxo_ComPeriodo_IncluiUltimoDiaCompleto() {
 
         LocalDate inicio = LocalDate.of(2026, 11, 1);
@@ -215,6 +233,9 @@ class AgendaFluxoServiceTest {
     }
 
     @Test
+    /**
+     * Testa o lançamento de exceção quando a despesa é negativa.
+     */
     void consultarFluxo_ComDespesaNegativa_ThrowsException() {
 
         when(agendaRepository.findReceitas(

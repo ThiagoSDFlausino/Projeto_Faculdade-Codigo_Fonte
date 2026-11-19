@@ -1,3 +1,6 @@
+/**
+ * DTO utilizado para transportar os dados de despesa entre a API e o cliente.
+ */
 package faculdade.ManterDespesa.dto;
 
 import java.util.Date;
