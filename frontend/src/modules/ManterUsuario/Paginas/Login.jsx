@@ -46,7 +46,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(demoEmail, "bella123");
+      await login(demoEmail, "123456");
       navigate("/");
     } catch (err) {
       setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
@@ -176,9 +176,9 @@ export default function Login() {
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "quick-access-admin", email: "admin@faculdade.com", label: "Adm" },
-                  { id: "quick-access-secretaria", email: "recepcao@faculdade.com", label: "Recepção" },
-                  { id: "quick-access-profissional", email: "juliana@faculdade.com", label: "Profissional" },
+                  { id: "quick-access-admin", email: "adm@teste.com", label: "Adm" },
+                  { id: "quick-access-secretaria", email: "secretaria@teste.com", label: "Recepção" },
+                  { id: "quick-access-profissional", email: "profissional@teste.com", label: "Profissional" },
                 ].map((item) => (
                   <button
                     key={item.id}
