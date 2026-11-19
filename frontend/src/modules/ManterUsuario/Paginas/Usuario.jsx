@@ -187,7 +187,6 @@ export default function Equipe() {
                       <p className="font-semibold text-slate-800 truncate">{m.name}</p>
                       <p className="text-xs text-slate-400 truncate">{m.email}</p>
                     </div>
-                    {!m.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Ativo</span>}
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-rose-50">
                     <div className="min-w-0">

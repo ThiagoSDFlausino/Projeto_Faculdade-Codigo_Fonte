@@ -166,12 +166,14 @@ public class AgendaService {
             return agendaRepository.save(anterior);
         }
 
+        // Uma agenda não concluída pode possuir valorCobrado.
+        // Esse valor representa o preço histórico registrado na criação.
+        // Somente uma data de conclusão indevida deve ser bloqueada.
         if (anterior != null
-                && (anterior.getValorCobrado() != null
-                    || anterior.getDataConclusao() != null)) {
+                && anterior.getDataConclusao() != null) {
 
             throw new AgendaConflitoException(
-                "A agenda possui dados financeiros, mas não está concluída. "
+                "A agenda possui data de conclusão, mas não está concluída. "
                     + "Regularize o histórico antes de editá-la!"
             );
         }
@@ -274,21 +276,46 @@ public class AgendaService {
             }
         }
 
-        if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
+        // Recupera o preço atual do procedimento.
+        Float preco = procedimento.getPreco();
 
-            Float preco = procedimento.getPreco();
+        if (preco == null || !Float.isFinite(preco) || preco < 0) {
+            throw new IllegalArgumentException(
+                "O procedimento deve possuir um preço válido!"
+            );
+        }
 
-            if (preco == null || !Float.isFinite(preco) || preco < 0) {
-                throw new IllegalArgumentException(
-                    "O procedimento deve possuir um preço válido!"
-                );
-            }
+        // Identifica se é um novo agendamento ou se o procedimento foi trocado.
+        boolean novoAgendamento = anterior == null;
+
+        boolean procedimentoAlterado = !novoAgendamento
+            && (anterior.getProcedimento() == null
+                || !Objects.equals(
+                    anterior.getProcedimento().getId(),
+                    procedimento.getId()
+                ));
+
+        // Registra o preço na criação e preserva o histórico nas atualizações.
+        if (novoAgendamento
+                || procedimentoAlterado
+                || anterior.getValorCobrado() == null) {
 
             agenda.setValorCobrado(preco);
-            agenda.setDataConclusao(new Date());
 
         } else {
-            agenda.setValorCobrado(null);
+            agenda.setValorCobrado(anterior.getValorCobrado());
+        }
+
+        // A data de conclusão só é registrada quando a agenda é concluída.
+        if (agenda.getStatusAgenda() == StatusAgenda.CONCLUIDO) {
+
+            if (anterior == null || anterior.getDataConclusao() == null) {
+                agenda.setDataConclusao(new Date());
+            } else {
+                agenda.setDataConclusao(anterior.getDataConclusao());
+            }
+
+        } else {
             agenda.setDataConclusao(null);
         }
 
@@ -298,6 +325,7 @@ public class AgendaService {
 
         return agendaRepository.save(agenda);
     }
+
 
     /**
      * Recupera uma agenda específica com o ID fornecido.
@@ -465,7 +493,7 @@ public class AgendaService {
                 );
             }
 
-            Float valor = confirmada.getProcedimento().getPreco();
+            Float valor = confirmada.getValorCobrado();
 
             if (valor == null || !Float.isFinite(valor) || valor < 0) {
                 throw new IllegalStateException(

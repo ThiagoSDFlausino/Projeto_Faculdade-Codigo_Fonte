@@ -305,7 +305,7 @@ export default function Agendamentos() {
                                 <p className="text-sm text-slate-500 flex items-center gap-1"><User className="w-3 h-3" /> {a.cliente_name}</p>
                                 <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
                                   <span>{a.professional || "—"}</span> • <MapPin className="w-3 h-3" /> {a.room}
-                                  {(a.valor_cobrado ?? a.value) ? <span className="text-emerald-600 font-medium">• {brl(a.valor_cobrado ?? a.value)}</span> : null}
+                                  {(a.valor_cobrado !== null) ? <span className="text-emerald-600 font-medium">• {brl(a.valor_cobrado)}</span> : null}
                                 </p>
                                 {a.observacoes ? <p className="text-xs text-slate-400 mt-0.5 italic truncate max-w-md">{a.observacoes}</p> : null}
                               </div>

@@ -194,7 +194,7 @@ function agendaTela(agenda) {
     datetime: dataLocal(agenda.dataHoraInicio),
     data_conclusao: agenda.dataConclusao,
     valor_cobrado: agenda.valorCobrado,
-    value: agenda.valorCobrado ?? agenda.procedimento?.preco,
+    value: agenda.valorCobrado ,
     observacoes: agenda.observacoes ?? "",
     status: STATUS_TELA[agenda.statusAgenda] || agenda.statusAgenda,
   };
@@ -342,7 +342,7 @@ function itemFluxo(agenda, entrada) {
       .filter(Boolean)
       .join(" - "),
     categoria: agenda.procedimento?.nome ?? "",
-    valor: entrada ? agenda.valorCobrado : agenda.procedimento?.preco,
+    valor: agenda.valorCobrado,
     origem: "agenda",
     status_agenda: STATUS_TELA[agenda.statusAgenda],
     profissional: agenda.profissional?.nome ?? "",

@@ -70,7 +70,12 @@ public class UsuarioController {
             );
         }
     }
-
+    /**
+     * Consulta o usuário autenticado.
+     *
+     * @param jwt token de autenticação.
+     * @return objeto contendo os dados do usuário autenticado.
+     */
     @Operation(summary = "Consultar usuário autenticado.")
     @GetMapping("/auth/me")
     public ResponseEntity<UsuarioAutenticadoDTO> me(
@@ -97,6 +102,16 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Cria um usuário por parâmetros.
+     *
+     * @param nome nome do usuário.
+     * @param email email do usuário.
+     * @param senha senha do usuário.
+     * @param funcao função do usuário.
+     * @param perfil perfil do usuário.
+     * @return objeto contendo o resultado da criação do usuário.
+     */
     @Operation(summary = "Criar usuário por parâmetros.")
     @PostMapping("/usuarios-api/Usuarios/param")
     public ResponseEntity<String> createString(
@@ -147,6 +162,12 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Cria um usuário por JSON.
+     *
+     * @param usuarioDTO objeto contendo os dados do usuário.
+     * @return objeto contendo o resultado da criação do usuário.
+     */
     @Operation(summary = "Criar usuário por JSON.")
     @PostMapping("/usuarios-api/Usuarios")
     public ResponseEntity<UsuarioAutenticadoDTO> create(
@@ -221,6 +242,13 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Atualiza um usuário por JSON.
+     *
+     * @param usuarioDTO objeto contendo os dados do usuário.
+     * @param id ID do usuário.
+     * @return objeto contendo o resultado da atualização do usuário.
+     */
     @Operation(summary = "Atualizar usuário.")
     @PutMapping("/usuarios-api/Usuarios/{id}")
     public ResponseEntity<String> update(
@@ -330,6 +358,12 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Exclui um usuário por ID.
+     *
+     * @param id ID do usuário.
+     * @return objeto contendo o resultado da exclusão do usuário.
+     */
     @Operation(summary = "Excluir usuário.")
     @DeleteMapping("/usuarios-api/Usuarios/{id}")
     public ResponseEntity<String> delete(@PathVariable Integer id) {
@@ -356,6 +390,11 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Lista todos os usuários sem senha.
+     *
+     * @return objeto contendo a lista de usuários.
+     */
     @Operation(summary = "Listar usuários sem senha.")
     @GetMapping("/usuarios-api/Usuarios")
     public ResponseEntity<List<UsuarioAutenticadoDTO>> getAll() {
