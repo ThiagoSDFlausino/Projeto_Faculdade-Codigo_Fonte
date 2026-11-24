@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #FDF7F8;
+}
+
+code, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+h1, h2, h3, h4, .font-display {
+    font-family: 'Outfit', sans-serif;
+}
+
+@layer base {
+    :root {
+        --background: 345 40% 98%;
+        --foreground: 275 33% 12%;
+        --card: 0 0% 100%;
+        --card-foreground: 275 33% 12%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 275 33% 12%;
+        --primary: 348 71% 69%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 345 50% 96%;
+        --secondary-foreground: 275 33% 20%;
+        --muted: 345 40% 96%;
+        --muted-foreground: 275 10% 45%;
+        --accent: 345 60% 94%;
+        --accent-foreground: 348 60% 40%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 345 45% 92%;
+        --input: 345 45% 92%;
+        --ring: 348 71% 69%;
+        --chart-1: 348 71% 69%;
+        --chart-2: 320 65% 60%;
+        --chart-3: 270 60% 65%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 160 60% 45%;
+        --radius: 1rem;
+        --card-rose: 340 65% 55%;
+        --card-gold: 35 85% 55%;
+        --card-blush: 350 55% 62%;
+        --card-mauve: 320 30% 42%;
+    }
+    .dark {
+        --background: 275 30% 8%;
+        --foreground: 345 40% 96%;
+        --card: 275 25% 12%;
+        --card-foreground: 345 40% 96%;
+        --popover: 275 25% 12%;
+        --popover-foreground: 345 40% 96%;
+        --primary: 348 71% 69%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 275 20% 18%;
+        --secondary-foreground: 345 40% 96%;
+        --muted: 275 20% 18%;
+        --muted-foreground: 345 15% 65%;
+        --accent: 275 20% 20%;
+        --accent-foreground: 345 40% 96%;
+        --destructive: 0 62.8% 45%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 275 20% 20%;
+        --input: 275 20% 20%;
+        --ring: 348 71% 69%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #f3c6d0; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #E87A90; }
+
+.ai-shimmer {
+    background: linear-gradient(110deg, #fce7ec 8%, #f9d5de 18%, #fce7ec 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+    to { background-position-x: -200%; }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] { display: contents !important; }
+}

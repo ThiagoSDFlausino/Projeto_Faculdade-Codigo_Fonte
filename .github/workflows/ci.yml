@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend - build e testes
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: projeto_test
+          POSTGRES_USER: projeto_test
+          POSTGRES_PASSWORD: senha_exclusiva_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U projeto_test -d projeto_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend-spring
+
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Configurar chave JWT exclusiva dos testes
+        run: |
+          echo "JWT_SECRET_BASE64=$(openssl rand -base64 32 | tr -d '\n')" >> "$GITHUB_ENV"
+
+      - name: Compilar, executar testes e empacotar
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/projeto_test
+          SPRING_DATASOURCE_USERNAME: projeto_test
+          SPRING_DATASOURCE_PASSWORD: senha_exclusiva_ci
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+
+          # Somente para o PostgreSQL descartável deste job.
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+
+          SPRING_JPA_SHOW_SQL: "false"
+          LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+          LOGGING_LEVEL_FACULDADE: INFO
+
+          APP_AUTH_ALLOW_LEGACY_PASSWORDS: "false"
+          ALLOW_LEGACY_PASSWORDS: "false"
+        run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Publicar relatórios de testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-relatorios-testes
+          path: |
+            backend-spring/target/surefire-reports/
+            backend-spring/target/failsafe-reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publicar JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend-spring/target/*.jar
+          if-no-files-found: error
+          retention-days: 7
+
+  frontend:
+    name: Frontend - testes e build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar testes
+        env:
+          CI: "true"
+        run: npm test -- --watchAll=false --passWithNoTests
+
+      - name: Gerar build
+        env:
+          CI: "true"
+          REACT_APP_BACKEND_URL: http://localhost:8081
+        run: npm run build
+
+      - name: Publicar build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-validacao
+          path: frontend/build/
+          if-no-files-found: error
+          retention-days: 7
